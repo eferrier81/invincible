@@ -1,0 +1,2 @@
+-- Seed data placeholder
+-- Add initial bosses, characters, and skills here.
