@@ -1,2 +1,3 @@
--- Seed data placeholder
--- Add initial bosses, characters, and skills here.
+-- Prefer the maintained TypeScript seed (bosses + characters, idempotent by name):
+--   cd scripts/db-seed && npm install && npm run seed
+-- Env: project root .env (DB_*). Create tables first (start Spring Boot once with ddl-auto: update).

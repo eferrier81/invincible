@@ -9,6 +9,8 @@ import com.invinciblegame.dto.response.UserProfileResponse;
 import com.invinciblegame.exception.ApiException;
 import com.invinciblegame.repository.UserRepository;
 import com.invinciblegame.security.JwtUtils;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,17 +21,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final CurrentUserService currentUserService;
+    private final EnergyService energyService;
 
     public AuthService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         JwtUtils jwtUtils,
-        CurrentUserService currentUserService
+        CurrentUserService currentUserService,
+        EnergyService energyService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.currentUserService = currentUserService;
+        this.energyService = energyService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -44,6 +49,8 @@ public class AuthService {
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(Role.PLAYER);
+        user.setEnergy(EnergyService.MAX_ENERGY);
+        user.setLastEnergyUpdate(LocalDateTime.now());
         user = userRepository.save(user);
         return tokenResponse(user);
     }
@@ -54,12 +61,30 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
+        energyService.syncRegeneration(user);
+        user = userRepository.findById(user.getId()).orElseThrow();
         return tokenResponse(user);
     }
 
     public UserProfileResponse me() {
         User user = currentUserService.requireCurrentUser();
-        return new UserProfileResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRole().name(), user.getEnergy());
+        energyService.syncRegeneration(user);
+        user = userRepository.findById(user.getId()).orElseThrow();
+        LocalDateTime next = energyService.computeNextEnergyAt(user);
+        Long secondsUntil = null;
+        if (next != null) {
+            secondsUntil = Math.max(0L, ChronoUnit.SECONDS.between(LocalDateTime.now(), next));
+        }
+        return new UserProfileResponse(
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getRole().name(),
+            user.getEnergy(),
+            EnergyService.MAX_ENERGY,
+            next != null ? next.toString() : null,
+            secondsUntil
+        );
     }
 
     private AuthResponse tokenResponse(User user) {

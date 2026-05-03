@@ -36,7 +36,8 @@ public class BossService {
             boss.getDefense(),
             boss.getSpeed(),
             boss.getHardcoreMultiplier(),
-            boss.getDescription()
+            boss.getDescription(),
+            boss.getImageUrl()
         );
     }
 }

@@ -31,7 +31,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "buildTarget": "invincible-game:build"
+            "buildTarget": "invincible-game:build",
+            "proxyConfig": "proxy.conf.json"
           }
         },
         "lint": {

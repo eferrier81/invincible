@@ -12,6 +12,9 @@ export interface UserProfile {
   email: string;
   role: Role;
   energy: number;
+  maxEnergy: number;
+  nextEnergyAt: string | null;
+  secondsUntilNextEnergy: number | null;
 }
 
 export interface CardModel {
@@ -24,6 +27,8 @@ export interface CardModel {
   defense: number;
   speed: number;
   owned: boolean;
+  /** Relative path e.g. `/images/characters/invincible.png` */
+  imageUrl?: string | null;
 }
 
 export interface DeckModel {
@@ -44,6 +49,22 @@ export interface BossModel {
   speed: number;
   hardcoreMultiplier: number;
   description: string;
+  /** Relative path e.g. `/images/bosses/conquest.png` */
+  imageUrl?: string | null;
+}
+
+export interface BattleAllyModel {
+  characterId: number;
+  name: string;
+  currentHp: number;
+  maxHp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  skillCooldownRemaining: number;
+  /** True after this hero used Desperation in this battle (phase 3 ability, once per hero). */
+  desperationUsed: boolean;
+  imageUrl?: string | null;
 }
 
 export interface BattleModel {
@@ -54,7 +75,25 @@ export interface BattleModel {
   hardcore: boolean;
   turnsTaken: number;
   bossCurrentHp: number;
+  bossMaxHp: number;
+  bossImageUrl?: string | null;
   teamCurrentHp: number;
+  /** Which ally must act (3v1 turn order). Null when battle ended. */
+  expectedCharacterId: number | null;
+  roundNumber: number;
+  allies: BattleAllyModel[];
+  /** 1 = upper third HP, 2 = middle, 3 = lower. */
+  bossPhase: number;
+  /** Team actions unlocked for the current boss phase (e.g. FOCUS, DESPERATION). */
+  teamUnlockedAbilities: string[];
+  /** Boss passives for the current phase (e.g. CRUSH, FURY). */
+  bossUnlockedAbilities: string[];
+  /** Full rounds before forced loss (team+boss cycles). */
+  maxRounds: number;
+  /** BOSS_DEFEATED | ALL_HEROES_DEFEATED | ROUND_LIMIT | null (in progress or legacy). */
+  lossReason: string | null;
+  /** Own-action turns of cooldown on a character after using Skill (Attack has no cooldown and reduces this counter). */
+  skillCooldownAfterUse: number;
   rewardClaimed: boolean;
   createdAt: string;
   endedAt: string | null;

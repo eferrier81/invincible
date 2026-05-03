@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel, DeckModel } from "../../core/models";
+import { imageSrc } from "../../core/image-url";
 
 @Component({
   standalone: true,
@@ -27,21 +28,93 @@ import { CardModel, DeckModel } from "../../core/models";
         </div>
         <button type="submit" [disabled]="form.invalid">Save deck</button>
       </form>
-      <p *ngIf="error" style="color:#b00020">{{ error }}</p>
+      <p *ngIf="error" class="form-error">{{ error }}</p>
     </section>
 
     <section class="card">
       <h3>Owned cards</h3>
-      <p *ngFor="let c of ownedCards">{{ c.id }} - {{ c.name }} ({{ c.rarity }})</p>
+      <div class="grid-responsive owned-grid">
+        <div class="owned-tile" *ngFor="let c of ownedCards">
+          <div class="entity-media">
+            <img *ngIf="img(c); else noMini" class="img-entity owned-tile__img" [src]="img(c)!" [alt]="c.name" loading="lazy" />
+            <ng-template #noMini>
+              <div class="entity-placeholder owned-tile__ph">{{ c.name.slice(0, 2) }}</div>
+            </ng-template>
+          </div>
+          <div class="owned-tile__text">
+            <span class="owned-tile__id">{{ c.id }}</span>
+            <span class="owned-tile__name">{{ c.name }}</span>
+            <span class="owned-tile__rarity">{{ c.rarity }}</span>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="card" *ngFor="let d of decks">
       <h3>{{ d.name }} (slot {{ d.slotNumber }})</h3>
       <p>{{ d.description }}</p>
       <p>Characters: {{ d.characterIds.join(", ") }}</p>
-      <button (click)="remove(d.id)">Delete</button>
+      <button type="button" (click)="remove(d.id)">Delete</button>
     </section>
   `,
+  styles: [
+    `
+      .form-error {
+        color: #b00020;
+        margin: 0;
+      }
+      .owned-grid {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+      }
+      .owned-tile {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        background: #fafafa;
+      }
+      .owned-tile__img {
+        width: 72px;
+        height: 72px;
+        max-width: 72px;
+        aspect-ratio: 1 / 1;
+        flex-shrink: 0;
+      }
+      .owned-tile__ph {
+        width: 72px;
+        height: 72px;
+        max-width: 72px;
+        min-height: 72px;
+        aspect-ratio: 1 / 1;
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+      .owned-tile__text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .owned-tile__id {
+        font-size: 0.75rem;
+        color: #78909c;
+      }
+      .owned-tile__name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        line-height: 1.25;
+        word-break: break-word;
+      }
+      .owned-tile__rarity {
+        font-size: 0.8rem;
+        color: #5c6bc0;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+    `,
+  ],
 })
 export class DecksComponent {
   decks: DeckModel[] = [];
@@ -94,5 +167,9 @@ export class DecksComponent {
       next: (res) => (this.decks = res),
       error: (err) => (this.error = err?.error?.error ?? "Failed to load decks"),
     });
+  }
+
+  img(c: CardModel): string | null {
+    return imageSrc(c.imageUrl);
   }
 }

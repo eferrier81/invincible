@@ -9,5 +9,7 @@ public record CardResponse(
     Integer attack,
     Integer defense,
     Integer speed,
-    boolean owned
+    boolean owned,
+    /** Web path served under `/images/...` (e.g. `/images/characters/invincible.png`). */
+    String imageUrl
 ) {}

@@ -19,6 +19,7 @@ public class Boss {
     @Enumerated(EnumType.STRING)
     private Difficulty difficulty;
     private Double hardcoreMultiplier = 1.5;
+    @Column(name = "image_url", length = 512)
     private String imageUrl;
 
     public Long getId() { return id; }

@@ -55,7 +55,8 @@ public class CardService {
             card.getAttack(),
             card.getDefense(),
             card.getSpeed(),
-            owned
+            owned,
+            card.getImageUrl()
         );
     }
 }

@@ -1,6 +1,8 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
+import { normalizeBattle, normalizeBoss, normalizeCard } from "../api-normalize";
 import { BattleModel, BossModel, CardModel, DeckModel } from "../models";
 import { environment } from "../../../environments/environment";
 
@@ -11,11 +13,15 @@ export class GameApiService {
   constructor(private readonly http: HttpClient) {}
 
   getCards(owned = false): Observable<CardModel[]> {
-    return this.http.get<CardModel[]>(`${this.api}/cards?owned=${owned}`);
+    return this.http
+      .get<Record<string, unknown>[]>(`${this.api}/cards?owned=${owned}`)
+      .pipe(map((rows) => rows.map(normalizeCard)));
   }
 
   getBosses(): Observable<BossModel[]> {
-    return this.http.get<BossModel[]>(`${this.api}/bosses`);
+    return this.http
+      .get<Record<string, unknown>[]>(`${this.api}/bosses`)
+      .pipe(map((rows) => rows.map(normalizeBoss)));
   }
 
   getDecks(): Observable<DeckModel[]> {
@@ -48,21 +54,32 @@ export class GameApiService {
   }
 
   startBattle(payload: { bossId: number; deckId: number; isHardcore: boolean }): Observable<BattleModel> {
-    return this.http.post<BattleModel>(`${this.api}/battles/start`, payload);
+    return this.http
+      .post<Record<string, unknown>>(`${this.api}/battles/start`, payload)
+      .pipe(map(normalizeBattle));
   }
 
   doAction(
     battleId: number,
-    payload: { actorId: number; actionType: "ATTACK" | "SKILL"; skillId?: number; targetId: number }
+    payload: {
+      actorId: number;
+      actionType: "ATTACK" | "SKILL" | "FOCUS" | "DESPERATION";
+      skillId?: number;
+      targetId: number;
+    }
   ): Observable<BattleModel> {
-    return this.http.post<BattleModel>(`${this.api}/battles/${battleId}/action`, payload);
+    return this.http
+      .post<Record<string, unknown>>(`${this.api}/battles/${battleId}/action`, payload)
+      .pipe(map(normalizeBattle));
   }
 
   getBattle(id: number): Observable<BattleModel> {
-    return this.http.get<BattleModel>(`${this.api}/battles/${id}`);
+    return this.http.get<Record<string, unknown>>(`${this.api}/battles/${id}`).pipe(map(normalizeBattle));
   }
 
   getHistory(): Observable<BattleModel[]> {
-    return this.http.get<BattleModel[]>(`${this.api}/battles/history`);
+    return this.http
+      .get<Record<string, unknown>[]>(`${this.api}/battles/history`)
+      .pipe(map((rows) => rows.map(normalizeBattle)));
   }
 }

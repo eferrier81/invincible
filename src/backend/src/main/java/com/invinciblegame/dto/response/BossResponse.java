@@ -9,5 +9,7 @@ public record BossResponse(
     Integer defense,
     Integer speed,
     Double hardcoreMultiplier,
-    String description
+    String description,
+    /** Web path served under `/images/...` (e.g. `/images/bosses/conquest.png`). */
+    String imageUrl
 ) {}

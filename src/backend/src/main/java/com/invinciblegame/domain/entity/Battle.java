@@ -28,6 +28,9 @@ public class Battle {
     private Boolean rewardClaimed = false;
     private Integer bossCurrentHp;
     private Integer teamCurrentHp;
+    /** JSON snapshot for 3v1 turn state (allies HP, initiative, expected actor, cooldowns). */
+    @Column(columnDefinition = "TEXT")
+    private String battleStateJson;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime endedAt;
 
@@ -50,6 +53,8 @@ public class Battle {
     public void setBossCurrentHp(Integer bossCurrentHp) { this.bossCurrentHp = bossCurrentHp; }
     public Integer getTeamCurrentHp() { return teamCurrentHp; }
     public void setTeamCurrentHp(Integer teamCurrentHp) { this.teamCurrentHp = teamCurrentHp; }
+    public String getBattleStateJson() { return battleStateJson; }
+    public void setBattleStateJson(String battleStateJson) { this.battleStateJson = battleStateJson; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getEndedAt() { return endedAt; }
     public void setEndedAt(LocalDateTime endedAt) { this.endedAt = endedAt; }

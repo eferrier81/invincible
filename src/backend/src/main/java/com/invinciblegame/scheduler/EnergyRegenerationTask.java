@@ -1,26 +1,20 @@
 package com.invinciblegame.scheduler;
 
-import com.invinciblegame.repository.UserRepository;
-import java.time.LocalDateTime;
+import com.invinciblegame.service.EnergyService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 public class EnergyRegenerationTask {
-    private final UserRepository userRepository;
+    private final EnergyService energyService;
 
-    public EnergyRegenerationTask(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public EnergyRegenerationTask(EnergyService energyService) {
+        this.energyService = energyService;
     }
 
+    /** Hourly pass: applies time-based regen (+1 per full hour since last tick) for every user. */
     @Scheduled(fixedRate = 60 * 60 * 1000)
     public void regenerateEnergyHourly() {
-        userRepository.findAll().forEach(user -> {
-            if (user.getEnergy() < 5) {
-                user.setEnergy(user.getEnergy() + 1);
-                user.setLastEnergyUpdate(LocalDateTime.now());
-                userRepository.save(user);
-            }
-        });
+        energyService.syncAllUsers();
     }
 }

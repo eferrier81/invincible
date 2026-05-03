@@ -20,6 +20,7 @@ public class CharacterCard {
     private String passiveKey;
     private String passiveValue;
     private Boolean isPlayable = true;
+    @Column(name = "image_url", length = 512)
     private String imageUrl;
 
     public Long getId() { return id; }

@@ -1,9 +1,10 @@
 import { bootstrapApplication } from "@angular/platform-browser";
-import { Component } from "@angular/core";
+import { Component, DestroyRef, OnInit, inject } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { appConfig } from "./app/app.config";
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { NgIf } from "@angular/common";
-import { inject } from "@angular/core";
+import { interval } from "rxjs";
 import { AuthService } from "./app/core/services/auth.service";
 
 @Component({
@@ -22,15 +23,41 @@ import { AuthService } from "./app/core/services/auth.service";
         <a routerLink="/login" routerLinkActive="active" *ngIf="!isLoggedIn()">Login</a>
         <a routerLink="/register" routerLinkActive="active" *ngIf="!isLoggedIn()">Register</a>
       </nav>
-      <button *ngIf="isLoggedIn()" (click)="logout()">Logout</button>
+      <div class="topbar-right">
+        <span class="energy-badge" *ngIf="isLoggedIn() && energyHeader">{{ energyHeader }}</span>
+        <button *ngIf="isLoggedIn()" (click)="logout()">Logout</button>
+      </div>
     </header>
     <main class="page">
       <router-outlet></router-outlet>
     </main>
   `,
 })
-class AppComponent {
+class AppComponent implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
+  energyHeader = "";
+
+  ngOnInit(): void {
+    if (!this.auth.isLoggedIn()) return;
+    this.refreshEnergyHeader();
+    interval(60_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (this.auth.isLoggedIn()) this.refreshEnergyHeader();
+      });
+  }
+
+  private refreshEnergyHeader(): void {
+    this.auth.me().subscribe({
+      next: (p) => {
+        this.energyHeader = `Energy ${p.energy}/${p.maxEnergy}`;
+      },
+      error: () => {
+        this.energyHeader = "";
+      },
+    });
+  }
 
   isLoggedIn(): boolean {
     return this.auth.isLoggedIn();
