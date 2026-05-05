@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { NgClass, NgFor, NgIf } from "@angular/common";
 import { ActivatedRoute } from "@angular/router";
-import { BattleAllyModel, BattleModel, BossModel, DeckModel, UserProfile } from "../../core/models";
+import { BattleAllyModel, BattleModel, BossModel, CardModel, DeckModel, UserProfile } from "../../core/models";
 import { GameApiService } from "../../core/services/game-api.service";
 import { AuthService } from "../../core/services/auth.service";
 import { imageSrc } from "../../core/image-url";
@@ -71,6 +71,31 @@ import { imageSrc } from "../../core/image-url";
       >
         {{ outcomeTitle() }}<span *ngIf="outcomeSubtitle()"> — {{ outcomeSubtitle() }}</span>
       </p>
+      <div *ngIf="showRewardPack()" class="reward-pack">
+        <h4>Battle reward — pick 1</h4>
+        <div class="reward-grid">
+          <button
+            type="button"
+            class="reward-card"
+            *ngFor="let c of battle.rewardOptions"
+            [ngClass]="{ selected: selectedRewardId === c.id }"
+            (click)="selectReward(c.id)"
+          >
+            <div class="entity-media">
+              <img *ngIf="rewardImage(c); else noRewardImage" class="img-entity reward-card__img" [src]="rewardImage(c)!" [alt]="c.name" />
+              <ng-template #noRewardImage>
+                <div class="entity-placeholder reward-card__ph">{{ c.name.slice(0, 2) }}</div>
+              </ng-template>
+            </div>
+            <div class="reward-card__text">
+              <strong>{{ c.name }}</strong>
+              <span class="reward-card__rarity">{{ c.rarity }}</span>
+              <span *ngIf="c.owned" class="reward-card__dup">Duplicate → upgrade</span>
+            </div>
+          </button>
+        </div>
+        <button type="button" (click)="claimReward()" [disabled]="selectedRewardId == null">Claim reward</button>
+      </div>
       <p class="hint">
         <strong>One action per character per turn:</strong> Attack (no cooldown) or Skill (cooldown {{ battle.skillCooldownAfterUse }} — use Attack on that
         character's later turns to reduce it). From <strong>phase 2</strong> the team unlocks <strong>Focus</strong>; from <strong>phase 3</strong>,
@@ -378,6 +403,59 @@ import { imageSrc } from "../../core/image-url";
         padding-left: 1.2rem;
         font-size: 0.9rem;
       }
+      .reward-pack {
+        margin: 12px 0 16px;
+        padding: 12px;
+        border: 1px dashed #c5cae9;
+        border-radius: 10px;
+        background: #f8f9ff;
+      }
+      .reward-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin: 8px 0 12px;
+      }
+      .reward-card {
+        text-align: left;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 8px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .reward-card.selected {
+        border-color: #1565c0;
+        box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.25);
+      }
+      .reward-card__img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 8px;
+        margin-bottom: 6px;
+      }
+      .reward-card__ph {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 8px;
+        margin-bottom: 6px;
+      }
+      .reward-card__text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.9rem;
+      }
+      .reward-card__rarity {
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.75rem;
+        color: #5c6bc0;
+      }
+      .reward-card__dup {
+        font-size: 0.75rem;
+        color: #455a64;
+      }
     `,
   ],
 })
@@ -387,6 +465,7 @@ export class BattleComponent implements OnInit {
   battle?: BattleModel;
   profile?: UserProfile;
   error = "";
+  selectedRewardId: number | null = null;
 
   startForm = this.fb.group({
     bossId: [1],
@@ -562,6 +641,7 @@ export class BattleComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.battle = res;
+          this.selectedRewardId = null;
           this.error = "";
           this.refreshProfile();
         },
@@ -596,9 +676,37 @@ export class BattleComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.battle = res;
+          this.selectedRewardId = null;
           this.error = "";
         },
         error: (err) => (this.error = err?.error?.error ?? "Failed action"),
       });
+  }
+
+  showRewardPack(): boolean {
+    return !!this.battle
+      && this.battle.result === "WIN"
+      && !this.battle.rewardClaimed
+      && this.battle.rewardOptions.length > 0;
+  }
+
+  selectReward(id: number): void {
+    this.selectedRewardId = id;
+  }
+
+  claimReward(): void {
+    if (!this.battle || this.selectedRewardId == null) return;
+    this.api.claimBattleReward(this.battle.id, this.selectedRewardId).subscribe({
+      next: (res) => {
+        this.battle = res;
+        this.selectedRewardId = null;
+        this.error = "";
+      },
+      error: (err) => (this.error = err?.error?.error ?? "Failed to claim reward"),
+    });
+  }
+
+  rewardImage(c: CardModel): string | null {
+    return imageSrc(c.imageUrl);
   }
 }

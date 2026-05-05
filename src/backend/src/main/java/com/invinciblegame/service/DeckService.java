@@ -68,7 +68,10 @@ public class DeckService {
     }
 
     private void validateDeckRequest(Long userId, DeckRequest request, Long existingDeckId) {
-        if (request.characterIds().size() != 3 || new HashSet<>(request.characterIds()).size() != 3) {
+        if (request.characterIds() == null || request.characterIds().size() != 3) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Deck must contain exactly 3 characters");
+        }
+        if (new HashSet<>(request.characterIds()).size() != 3) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Deck must contain exactly 3 distinct characters");
         }
         for (Long cardId : request.characterIds()) {
@@ -79,8 +82,13 @@ public class DeckService {
         if (existingDeckId == null && deckRepository.countByUserId(userId) >= 3) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Maximum 3 decks allowed");
         }
-        boolean slotTaken = deckRepository.existsByUserIdAndSlotNumber(userId, request.slotNumber());
-        if (slotTaken && existingDeckId == null) {
+        if (request.slotNumber() == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Slot number is required");
+        }
+        boolean slotTaken = existingDeckId == null
+            ? deckRepository.existsByUserIdAndSlotNumber(userId, request.slotNumber())
+            : deckRepository.existsByUserIdAndSlotNumberAndIdNot(userId, request.slotNumber(), existingDeckId);
+        if (slotTaken) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Slot already used");
         }
     }

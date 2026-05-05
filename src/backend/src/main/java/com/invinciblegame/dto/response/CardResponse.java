@@ -10,6 +10,8 @@ public record CardResponse(
     Integer defense,
     Integer speed,
     boolean owned,
+    Integer duplicateCount,
+    Integer abilityUpgradeIndex,
     /** Web path served under `/images/...` (e.g. `/images/characters/invincible.png`). */
     String imageUrl
 ) {}

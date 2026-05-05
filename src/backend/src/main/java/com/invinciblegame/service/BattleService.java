@@ -1,6 +1,7 @@
 package com.invinciblegame.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.invinciblegame.domain.battle.BattleAllyRuntime;
 import com.invinciblegame.domain.battle.BattleRuntimeState;
@@ -12,6 +13,7 @@ import com.invinciblegame.dto.request.ClaimRewardRequest;
 import com.invinciblegame.dto.request.StartBattleRequest;
 import com.invinciblegame.dto.response.BattleAllyResponse;
 import com.invinciblegame.dto.response.BattleResponse;
+import com.invinciblegame.dto.response.CardResponse;
 import com.invinciblegame.exception.ApiException;
 import com.invinciblegame.repository.*;
 import java.time.LocalDateTime;
@@ -29,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BattleService {
     private static final double SKILL_MULTIPLIER = 1.3;
+    private static final double SKILL_UPGRADE_STEP = 0.05;
+    private static final double SKILL_UPGRADE_CAP = 2.0;
     private static final double FOCUS_MULTIPLIER = 1.22;
     private static final double DESPERATION_MULTIPLIER = 1.58;
     private static final double BOSS_CRUSH_MULT = 1.25;
@@ -48,6 +52,8 @@ public class BattleService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final EnergyService energyService;
+    private final PackService packService;
+    private final RewardService rewardService;
     private final ObjectMapper objectMapper;
 
     public BattleService(
@@ -60,6 +66,8 @@ public class BattleService {
         UserRepository userRepository,
         CurrentUserService currentUserService,
         EnergyService energyService,
+        PackService packService,
+        RewardService rewardService,
         ObjectMapper objectMapper
     ) {
         this.battleRepository = battleRepository;
@@ -71,6 +79,8 @@ public class BattleService {
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
         this.energyService = energyService;
+        this.packService = packService;
+        this.rewardService = rewardService;
         this.objectMapper = objectMapper;
     }
 
@@ -139,7 +149,7 @@ public class BattleService {
         battle.setBattleStateJson(writeState(state));
         battle = battleRepository.save(battle);
 
-        return toResponse(battle);
+        return toResponse(battle, user.getId());
     }
 
     @Transactional
@@ -200,7 +210,7 @@ public class BattleService {
         int bossDef = boss.getDefense() == null ? 5 : boss.getDefense();
         int hpBeforeHit = state.getBossCurrentHp();
         double mult = switch (request.actionType()) {
-            case SKILL -> SKILL_MULTIPLIER;
+            case SKILL -> skillMultiplierFor(user.getId(), actor.getCharacterId());
             case FOCUS -> FOCUS_MULTIPLIER;
             case DESPERATION -> DESPERATION_MULTIPLIER;
             default -> 1.0;
@@ -245,9 +255,10 @@ public class BattleService {
             battle.setEndedAt(LocalDateTime.now());
             state.setExpectedCharacterId(null);
             state.setLossReason(END_BOSS_DEFEATED);
+            ensureRewardOptions(battle);
             syncAggregates(battle, state);
             battle.setBattleStateJson(writeState(state));
-            return toResponse(battleRepository.save(battle));
+            return toResponse(battleRepository.save(battle), user.getId());
         }
 
         state.setExpectedCharacterId(nextExpectedAlly(state));
@@ -257,7 +268,7 @@ public class BattleService {
             if (battle.getResult() != BattleResult.IN_PROGRESS) {
                 syncAggregates(battle, state);
                 battle.setBattleStateJson(writeState(state));
-                return toResponse(battleRepository.save(battle));
+                return toResponse(battleRepository.save(battle), user.getId());
             }
             state.setRoundNumber(state.getRoundNumber() + 1);
             if (state.getRoundNumber() > BattleRuntimeState.MAX_ROUNDS) {
@@ -277,7 +288,7 @@ public class BattleService {
                     0,
                     "Round limit (" + BattleRuntimeState.MAX_ROUNDS + ") — all heroes are overwhelmed. Defeat."
                 );
-                return toResponse(battleRepository.save(battle));
+                return toResponse(battleRepository.save(battle), user.getId());
             }
             state.setActedThisRound(new HashSet<>());
             state.setExpectedCharacterId(nextExpectedAlly(state));
@@ -285,7 +296,7 @@ public class BattleService {
 
         syncAggregates(battle, state);
         battle.setBattleStateJson(writeState(state));
-        return toResponse(battleRepository.save(battle));
+        return toResponse(battleRepository.save(battle), user.getId());
     }
 
     private void runBossTurn(Battle battle, BattleRuntimeState state) {
@@ -371,6 +382,14 @@ public class BattleService {
         return Math.max(1, (int) Math.round(attack * skillMultiplier - defenderDefense * 0.5));
     }
 
+    private double skillMultiplierFor(Long userId, Long characterId) {
+        int upgrades = userCharacterRepository.findByUserIdAndCharacterId(userId, characterId)
+            .map(uc -> uc.getAbilityUpgradeIndex() == null ? 0 : uc.getAbilityUpgradeIndex())
+            .orElse(0);
+        double mult = SKILL_MULTIPLIER + (SKILL_UPGRADE_STEP * upgrades);
+        return Math.min(mult, SKILL_UPGRADE_CAP);
+    }
+
     private static List<String> teamAbilitiesForPhase(int phase) {
         List<String> list = new ArrayList<>();
         if (phase >= 2) {
@@ -400,12 +419,14 @@ public class BattleService {
 
     public BattleResponse getById(Long battleId) {
         User user = currentUserService.requireCurrentUser();
-        return toResponse(findOwnedBattle(user.getId(), battleId));
+        return toResponse(findOwnedBattle(user.getId(), battleId), user.getId());
     }
 
     public List<BattleResponse> history() {
         User user = currentUserService.requireCurrentUser();
-        return battleRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream().map(this::toResponse).toList();
+        return battleRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
+            .map(battle -> toResponse(battle, user.getId()))
+            .toList();
     }
 
     @Transactional
@@ -418,23 +439,16 @@ public class BattleService {
         if (battle.getRewardClaimed()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Reward already claimed");
         }
+        ensureRewardOptions(battle);
+        List<Long> optionIds = readRewardOptionIds(battle);
+        if (!optionIds.contains(request.characterId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Reward must be selected from the battle pack");
+        }
         CharacterCard card = cardRepository.findById(request.characterId())
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Reward character not found"));
-
-        userCharacterRepository.findByUserIdAndCharacterId(user.getId(), card.getId())
-            .ifPresentOrElse(existing -> {
-                existing.setDuplicateCount(existing.getDuplicateCount() + 1);
-                existing.setAbilityUpgradeIndex(existing.getAbilityUpgradeIndex() + 1);
-                userCharacterRepository.save(existing);
-            }, () -> {
-                UserCharacter uc = new UserCharacter();
-                uc.setUser(user);
-                uc.setCharacter(card);
-                userCharacterRepository.save(uc);
-            });
-
+        rewardService.grantCard(user, card);
         battle.setRewardClaimed(true);
-        return toResponse(battleRepository.save(battle));
+        return toResponse(battleRepository.save(battle), user.getId());
     }
 
     private Battle findOwnedBattle(Long userId, Long battleId) {
@@ -483,7 +497,7 @@ public class BattleService {
         }
     }
 
-    private BattleResponse toResponse(Battle battle) {
+    private BattleResponse toResponse(Battle battle, Long userId) {
         List<String> log = battleTurnRepository.findByBattleIdOrderByTurnNumberAsc(battle.getId()).stream()
             .map(BattleTurn::getActionDescription)
             .toList();
@@ -497,6 +511,7 @@ public class BattleService {
         List<String> teamUnlocked = List.of();
         List<String> bossUnlocked = List.of();
         String lossReason = null;
+        List<CardResponse> rewardOptions = List.of();
 
         if (battle.getBattleStateJson() != null && !battle.getBattleStateJson().isBlank()) {
             try {
@@ -537,6 +552,19 @@ public class BattleService {
             lossReason = END_BOSS_DEFEATED;
         }
 
+        if (battle.getResult() == BattleResult.WIN && !battle.getRewardClaimed()) {
+            List<Long> optionIds = readRewardOptionIds(battle);
+            if (!optionIds.isEmpty()) {
+                Map<Long, CharacterCard> byId = cardRepository.findAllById(optionIds).stream()
+                    .collect(Collectors.toMap(CharacterCard::getId, c -> c, (a, b) -> a));
+                List<CharacterCard> ordered = optionIds.stream()
+                    .map(byId::get)
+                    .filter(c -> c != null)
+                    .toList();
+                rewardOptions = rewardService.toResponsesWithOwnership(userId, ordered);
+            }
+        }
+
         return new BattleResponse(
             battle.getId(),
             battle.getBoss().getId(),
@@ -557,10 +585,39 @@ public class BattleService {
             bossUnlocked,
             BattleRuntimeState.MAX_ROUNDS,
             lossReason,
+            rewardOptions,
             battle.getRewardClaimed(),
             battle.getCreatedAt(),
             battle.getEndedAt(),
             log
         );
+    }
+
+    private void ensureRewardOptions(Battle battle) {
+        if (battle.getRewardOptionsJson() != null && !battle.getRewardOptionsJson().isBlank()) {
+            return;
+        }
+        List<CharacterCard> pack = packService.generatePack(3, true);
+        List<Long> ids = pack.stream().map(CharacterCard::getId).toList();
+        battle.setRewardOptionsJson(writeRewardOptions(ids));
+    }
+
+    private List<Long> readRewardOptionIds(Battle battle) {
+        if (battle.getRewardOptionsJson() == null || battle.getRewardOptionsJson().isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(battle.getRewardOptionsJson(), new TypeReference<List<Long>>() {});
+        } catch (JsonProcessingException e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Corrupt battle rewards");
+        }
+    }
+
+    private String writeRewardOptions(List<Long> ids) {
+        try {
+            return objectMapper.writeValueAsString(ids);
+        } catch (JsonProcessingException e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Cannot serialize battle rewards");
+        }
     }
 }

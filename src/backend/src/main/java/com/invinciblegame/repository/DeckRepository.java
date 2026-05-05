@@ -8,4 +8,5 @@ public interface DeckRepository extends JpaRepository<Deck, Long> {
     List<Deck> findByUserId(Long userId);
     long countByUserId(Long userId);
     boolean existsByUserIdAndSlotNumber(Long userId, Integer slotNumber);
+    boolean existsByUserIdAndSlotNumberAndIdNot(Long userId, Integer slotNumber, Long id);
 }

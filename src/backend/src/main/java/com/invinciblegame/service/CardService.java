@@ -1,6 +1,7 @@
 package com.invinciblegame.service;
 
 import com.invinciblegame.domain.entity.CharacterCard;
+import com.invinciblegame.domain.entity.UserCharacter;
 import com.invinciblegame.dto.response.CardResponse;
 import com.invinciblegame.exception.ApiException;
 import com.invinciblegame.repository.CharacterCardRepository;
@@ -29,11 +30,16 @@ public class CardService {
         var user = currentUserService.requireCurrentUser();
         if (ownedOnly) {
             return userCharacterRepository.findByUser(user).stream()
-                .map(uc -> toResponse(uc.getCharacter(), true))
+                .map(uc -> toResponse(uc.getCharacter(), true, uc))
                 .toList();
         }
+        var ownedMap = userCharacterRepository.findByUser(user).stream()
+            .collect(java.util.stream.Collectors.toMap(uc -> uc.getCharacter().getId(), uc -> uc));
         return cardRepository.findAll().stream()
-            .map(card -> toResponse(card, userCharacterRepository.existsByUserIdAndCharacterId(user.getId(), card.getId())))
+            .map(card -> {
+                UserCharacter uc = ownedMap.get(card.getId());
+                return toResponse(card, uc != null, uc);
+            })
             .toList();
     }
 
@@ -41,11 +47,13 @@ public class CardService {
         var user = currentUserService.requireCurrentUser();
         CharacterCard card = cardRepository.findById(id)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Card not found"));
-        boolean owned = userCharacterRepository.existsByUserIdAndCharacterId(user.getId(), id);
-        return toResponse(card, owned);
+        UserCharacter uc = userCharacterRepository.findByUserIdAndCharacterId(user.getId(), id).orElse(null);
+        return toResponse(card, uc != null, uc);
     }
 
-    private CardResponse toResponse(CharacterCard card, boolean owned) {
+    private CardResponse toResponse(CharacterCard card, boolean owned, UserCharacter uc) {
+        Integer dup = uc != null ? uc.getDuplicateCount() : null;
+        Integer upgrade = uc != null ? uc.getAbilityUpgradeIndex() : null;
         return new CardResponse(
             card.getId(),
             card.getName(),
@@ -56,6 +64,8 @@ public class CardService {
             card.getDefense(),
             card.getSpeed(),
             owned,
+            dup,
+            upgrade,
             card.getImageUrl()
         );
     }

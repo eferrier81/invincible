@@ -33,6 +33,8 @@ public record BattleResponse(
      * BOSS_DEFEATED, ALL_HEROES_DEFEATED, ROUND_LIMIT.
      */
     String lossReason,
+    /** Reward pack options (3 cards) when a boss win occurs and reward is unclaimed. */
+    List<CardResponse> rewardOptions,
     boolean rewardClaimed,
     LocalDateTime createdAt,
     LocalDateTime endedAt,

@@ -30,6 +30,7 @@ import { imageSrc } from "../../core/image-url";
           <p class="char-card__meta">{{ c.faction }}</p>
           <p class="char-card__stats">HP {{ c.maxHp }} · ATK {{ c.attack }} · DEF {{ c.defense }} · SPD {{ c.speed }}</p>
           <p class="char-card__owned" [class.char-card__owned--yes]="c.owned">{{ c.owned ? "Owned" : "Not owned" }}</p>
+          <p *ngIf="c.owned" class="char-card__upgrade">Skill upgrades: +{{ upgradeBonusPercent(c) }}%</p>
         </div>
       </article>
     </div>
@@ -111,6 +112,12 @@ import { imageSrc } from "../../core/image-url";
       .char-card__owned--yes {
         color: #2e7d32;
       }
+      .char-card__upgrade {
+        margin: 6px 0 0;
+        font-size: 0.8rem;
+        color: #5c6bc0;
+        font-weight: 600;
+      }
     `,
   ],
 })
@@ -131,5 +138,10 @@ export class CollectionComponent {
 
   img(c: CardModel): string | null {
     return imageSrc(c.imageUrl);
+  }
+
+  upgradeBonusPercent(c: CardModel): number {
+    const upgrades = c.abilityUpgradeIndex ?? 0;
+    return upgrades * 5;
   }
 }

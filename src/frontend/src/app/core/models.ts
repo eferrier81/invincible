@@ -27,6 +27,8 @@ export interface CardModel {
   defense: number;
   speed: number;
   owned: boolean;
+  duplicateCount?: number | null;
+  abilityUpgradeIndex?: number | null;
   /** Relative path e.g. `/images/characters/invincible.png` */
   imageUrl?: string | null;
 }
@@ -92,10 +94,24 @@ export interface BattleModel {
   maxRounds: number;
   /** BOSS_DEFEATED | ALL_HEROES_DEFEATED | ROUND_LIMIT | null (in progress or legacy). */
   lossReason: string | null;
+  /** Reward pack options when a boss win occurs and reward is unclaimed. */
+  rewardOptions: CardModel[];
   /** Own-action turns of cooldown on a character after using Skill (Attack has no cooldown and reduces this counter). */
   skillCooldownAfterUse: number;
   rewardClaimed: boolean;
   createdAt: string;
   endedAt: string | null;
   log: string[];
+}
+
+export interface PullStatusModel {
+  welcomeAvailable: boolean;
+  dailyAvailable: boolean;
+  nextDailyAt: string | null;
+}
+
+export interface PullResultModel {
+  type: string;
+  cards: CardModel[];
+  status: PullStatusModel;
 }

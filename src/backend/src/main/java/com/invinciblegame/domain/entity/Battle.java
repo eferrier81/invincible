@@ -28,6 +28,9 @@ public class Battle {
     private Boolean rewardClaimed = false;
     private Integer bossCurrentHp;
     private Integer teamCurrentHp;
+    /** JSON array of reward character ids for battle pack. */
+    @Column(columnDefinition = "TEXT")
+    private String rewardOptionsJson;
     /** JSON snapshot for 3v1 turn state (allies HP, initiative, expected actor, cooldowns). */
     @Column(columnDefinition = "TEXT")
     private String battleStateJson;
@@ -53,6 +56,8 @@ public class Battle {
     public void setBossCurrentHp(Integer bossCurrentHp) { this.bossCurrentHp = bossCurrentHp; }
     public Integer getTeamCurrentHp() { return teamCurrentHp; }
     public void setTeamCurrentHp(Integer teamCurrentHp) { this.teamCurrentHp = teamCurrentHp; }
+    public String getRewardOptionsJson() { return rewardOptionsJson; }
+    public void setRewardOptionsJson(String rewardOptionsJson) { this.rewardOptionsJson = rewardOptionsJson; }
     public String getBattleStateJson() { return battleStateJson; }
     public void setBattleStateJson(String battleStateJson) { this.battleStateJson = battleStateJson; }
     public LocalDateTime getCreatedAt() { return createdAt; }

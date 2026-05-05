@@ -29,6 +29,9 @@ public class User {
 
     private LocalDateTime lastEnergyUpdate = LocalDateTime.now();
 
+    private Boolean welcomePullClaimed = false;
+    private LocalDateTime lastDailyPullAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -46,4 +49,8 @@ public class User {
     public LocalDateTime getLastEnergyUpdate() { return lastEnergyUpdate; }
     public void setLastEnergyUpdate(LocalDateTime lastEnergyUpdate) { this.lastEnergyUpdate = lastEnergyUpdate; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Boolean getWelcomePullClaimed() { return welcomePullClaimed; }
+    public void setWelcomePullClaimed(Boolean welcomePullClaimed) { this.welcomePullClaimed = welcomePullClaimed; }
+    public LocalDateTime getLastDailyPullAt() { return lastDailyPullAt; }
+    public void setLastDailyPullAt(LocalDateTime lastDailyPullAt) { this.lastDailyPullAt = lastDailyPullAt; }
 }

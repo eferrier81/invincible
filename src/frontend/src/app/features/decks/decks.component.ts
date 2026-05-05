@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel, DeckModel } from "../../core/models";
@@ -26,8 +26,15 @@ import { imageSrc } from "../../core/image-url";
           <label>Characters (comma-separated ids, exactly 3)</label>
           <input formControlName="characterIdsCsv" placeholder="1,2,3" />
         </div>
-        <button type="submit" [disabled]="form.invalid">Save deck</button>
+        <button type="submit" [disabled]="form.invalid || !canCreateDeck">Save deck</button>
       </form>
+      <p *ngIf="form.controls.characterIdsCsv.errors?.['count']" class="form-error">
+        Pick exactly 3 characters.
+      </p>
+      <p *ngIf="form.controls.characterIdsCsv.errors?.['distinct']" class="form-error">
+        Characters must be distinct.
+      </p>
+      <p *ngIf="!canCreateDeck" class="form-error">You already have 3 decks. Delete one to save another.</p>
       <p *ngIf="error" class="form-error">{{ error }}</p>
     </section>
 
@@ -125,7 +132,7 @@ export class DecksComponent {
     name: ["", Validators.required],
     description: [""],
     slotNumber: [1, Validators.required],
-    characterIdsCsv: ["", Validators.required],
+    characterIdsCsv: ["", [Validators.required, this.threeIdsValidator]],
   });
 
   constructor(private readonly api: GameApiService, private readonly fb: FormBuilder) {
@@ -134,6 +141,10 @@ export class DecksComponent {
   }
 
   createDeck(): void {
+    if (!this.canCreateDeck) {
+      this.error = "Maximum 3 decks allowed";
+      return;
+    }
     const raw = this.form.getRawValue();
     const ids = (raw.characterIdsCsv ?? "")
       .split(",")
@@ -167,6 +178,24 @@ export class DecksComponent {
       next: (res) => (this.decks = res),
       error: (err) => (this.error = err?.error?.error ?? "Failed to load decks"),
     });
+  }
+
+  get canCreateDeck(): boolean {
+    return this.decks.length < 3;
+  }
+
+  private threeIdsValidator(control: AbstractControl): ValidationErrors | null {
+    const raw = String(control.value ?? "");
+    const ids = raw
+      .split(",")
+      .map((s) => Number(s.trim()))
+      .filter((n) => !Number.isNaN(n));
+
+    if (ids.length !== 3) {
+      return { count: true };
+    }
+
+    return new Set(ids).size === 3 ? null : { distinct: true };
   }
 
   img(c: CardModel): string | null {

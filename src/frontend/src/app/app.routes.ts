@@ -31,6 +31,11 @@ export const routes: Routes = [
     loadComponent: () => import("./features/decks/decks.component").then((m) => m.DecksComponent),
   },
   {
+    path: "pulls",
+    canActivate: [authGuard],
+    loadComponent: () => import("./features/pulls/pulls.component").then((m) => m.PullsComponent),
+  },
+  {
     path: "bosses",
     canActivate: [authGuard],
     loadComponent: () => import("./features/bosses/bosses.component").then((m) => m.BossesComponent),

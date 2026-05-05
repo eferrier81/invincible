@@ -1,4 +1,4 @@
-import { BattleAllyModel, BattleModel, BossModel, CardModel } from "./models";
+import { BattleAllyModel, BattleModel, BossModel, CardModel, PullResultModel, PullStatusModel } from "./models";
 
 /** First non-empty string among candidates (camelCase + snake_case from API). */
 export function pickStr(...vals: unknown[]): string | null {
@@ -55,6 +55,8 @@ export function normalizeCard(r: Record<string, unknown>): CardModel {
     defense: num(r["defense"]),
     speed: num(r["speed"]),
     owned: Boolean(r["owned"]),
+    duplicateCount: numOrNull(r["duplicateCount"] ?? r["duplicate_count"]),
+    abilityUpgradeIndex: numOrNull(r["abilityUpgradeIndex"] ?? r["ability_upgrade_index"]),
     imageUrl: pickStr(r["imageUrl"], r["image_url"]),
   };
 }
@@ -79,6 +81,10 @@ export function normalizeBattle(r: Record<string, unknown>): BattleModel {
   const allies: BattleAllyModel[] = Array.isArray(alliesRaw)
     ? alliesRaw.map((x) => normalizeBattleAlly(x as Record<string, unknown>))
     : [];
+  const rewardRaw = r["rewardOptions"] ?? r["reward_options"];
+  const rewardOptions: CardModel[] = Array.isArray(rewardRaw)
+    ? rewardRaw.map((x) => normalizeCard(x as Record<string, unknown>))
+    : [];
 
   return {
     id: num(r["id"]),
@@ -99,10 +105,35 @@ export function normalizeBattle(r: Record<string, unknown>): BattleModel {
     bossUnlockedAbilities: strList(r, "bossUnlockedAbilities", "boss_unlocked_abilities"),
     maxRounds: num(r["maxRounds"] ?? r["max_rounds"], 50),
     lossReason: pickStr(r["lossReason"], r["loss_reason"]),
+    rewardOptions,
     skillCooldownAfterUse: num(r["skillCooldownAfterUse"] ?? r["skill_cooldown_after_use"], 2),
     rewardClaimed: Boolean(r["rewardClaimed"] ?? r["reward_claimed"]),
     createdAt: String(r["createdAt"] ?? r["created_at"] ?? ""),
     endedAt: (r["endedAt"] ?? r["ended_at"]) as string | null,
     log: Array.isArray(r["log"]) ? r["log"].map(String) : [],
+  };
+}
+
+export function normalizePullStatus(r: Record<string, unknown>): PullStatusModel {
+  return {
+    welcomeAvailable: Boolean(r["welcomeAvailable"] ?? r["welcome_available"]),
+    dailyAvailable: Boolean(r["dailyAvailable"] ?? r["daily_available"]),
+    nextDailyAt: pickStr(r["nextDailyAt"], r["next_daily_at"]),
+  };
+}
+
+export function normalizePullResult(r: Record<string, unknown>): PullResultModel {
+  const cardsRaw = r["cards"];
+  const cards: CardModel[] = Array.isArray(cardsRaw)
+    ? cardsRaw.map((x) => normalizeCard(x as Record<string, unknown>))
+    : [];
+  const statusRaw = r["status"];
+  const status = statusRaw && typeof statusRaw === "object"
+    ? normalizePullStatus(statusRaw as Record<string, unknown>)
+    : { welcomeAvailable: false, dailyAvailable: false, nextDailyAt: null };
+  return {
+    type: String(r["type"] ?? ""),
+    cards,
+    status,
   };
 }

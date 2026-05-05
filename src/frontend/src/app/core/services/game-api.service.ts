@@ -2,8 +2,8 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { normalizeBattle, normalizeBoss, normalizeCard } from "../api-normalize";
-import { BattleModel, BossModel, CardModel, DeckModel } from "../models";
+import { normalizeBattle, normalizeBoss, normalizeCard, normalizePullResult, normalizePullStatus } from "../api-normalize";
+import { BattleModel, BossModel, CardModel, DeckModel, PullResultModel, PullStatusModel } from "../models";
 import { environment } from "../../../environments/environment";
 
 @Injectable({ providedIn: "root" })
@@ -81,5 +81,29 @@ export class GameApiService {
     return this.http
       .get<Record<string, unknown>[]>(`${this.api}/battles/history`)
       .pipe(map((rows) => rows.map(normalizeBattle)));
+  }
+
+  claimBattleReward(battleId: number, characterId: number): Observable<BattleModel> {
+    return this.http
+      .post<Record<string, unknown>>(`${this.api}/battles/${battleId}/claim-reward`, { characterId })
+      .pipe(map(normalizeBattle));
+  }
+
+  getPullStatus(): Observable<PullStatusModel> {
+    return this.http
+      .get<Record<string, unknown>>(`${this.api}/pulls/status`)
+      .pipe(map(normalizePullStatus));
+  }
+
+  welcomePull(): Observable<PullResultModel> {
+    return this.http
+      .post<Record<string, unknown>>(`${this.api}/pulls/welcome`, {})
+      .pipe(map(normalizePullResult));
+  }
+
+  dailyPull(): Observable<PullResultModel> {
+    return this.http
+      .post<Record<string, unknown>>(`${this.api}/pulls/daily`, {})
+      .pipe(map(normalizePullResult));
   }
 }

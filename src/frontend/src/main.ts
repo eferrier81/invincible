@@ -19,6 +19,7 @@ import { AuthService } from "./app/core/services/auth.service";
         <a routerLink="/decks" routerLinkActive="active" *ngIf="isLoggedIn()">Decks</a>
         <a routerLink="/bosses" routerLinkActive="active" *ngIf="isLoggedIn()">Bosses</a>
         <a routerLink="/battle" routerLinkActive="active" *ngIf="isLoggedIn()">Battle</a>
+        <a routerLink="/pulls" routerLinkActive="active" *ngIf="isLoggedIn()">Pulls / Packs</a>
         <a routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin()">Admin</a>
         <a routerLink="/login" routerLinkActive="active" *ngIf="!isLoggedIn()">Login</a>
         <a routerLink="/register" routerLinkActive="active" *ngIf="!isLoggedIn()">Register</a>
