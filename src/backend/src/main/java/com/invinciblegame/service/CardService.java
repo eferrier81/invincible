@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CardService {
+    private static final int PASSIVE_UNLOCK_LEVEL = 5;
+
     private final CharacterCardRepository cardRepository;
     private final UserCharacterRepository userCharacterRepository;
     private final CurrentUserService currentUserService;
@@ -54,6 +56,9 @@ public class CardService {
     private CardResponse toResponse(CharacterCard card, boolean owned, UserCharacter uc) {
         Integer dup = uc != null ? uc.getDuplicateCount() : null;
         Integer upgrade = uc != null ? uc.getAbilityUpgradeIndex() : null;
+        Integer level = uc != null ? uc.getLevel() : null;
+        String passiveKey = level != null && level >= PASSIVE_UNLOCK_LEVEL ? card.getPassiveKey() : null;
+        String passiveValue = level != null && level >= PASSIVE_UNLOCK_LEVEL ? card.getPassiveValue() : null;
         return new CardResponse(
             card.getId(),
             card.getName(),
@@ -66,6 +71,9 @@ public class CardService {
             owned,
             dup,
             upgrade,
+            level,
+            passiveKey,
+            passiveValue,
             card.getImageUrl()
         );
     }

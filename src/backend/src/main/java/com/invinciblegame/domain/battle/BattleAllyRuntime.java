@@ -14,6 +14,7 @@ public class BattleAllyRuntime {
     private int skillCooldownRemaining;
     /** Desperation (phase-3 ability) can only be used once per hero per battle. */
     private boolean desperationUsed;
+    private int level = 1;
 
     public BattleAllyRuntime() {}
 
@@ -27,7 +28,7 @@ public class BattleAllyRuntime {
         int speed,
         int skillCooldownRemaining
     ) {
-        this(characterId, name, currentHp, maxHp, attack, defense, speed, skillCooldownRemaining, false);
+        this(characterId, name, currentHp, maxHp, attack, defense, speed, skillCooldownRemaining, false, 1);
     }
 
     public BattleAllyRuntime(
@@ -39,7 +40,8 @@ public class BattleAllyRuntime {
         int defense,
         int speed,
         int skillCooldownRemaining,
-        boolean desperationUsed
+        boolean desperationUsed,
+        int level
     ) {
         this.characterId = characterId;
         this.name = name;
@@ -50,6 +52,7 @@ public class BattleAllyRuntime {
         this.speed = speed;
         this.skillCooldownRemaining = skillCooldownRemaining;
         this.desperationUsed = desperationUsed;
+        this.level = level;
     }
 
     public Long getCharacterId() { return characterId; }
@@ -70,4 +73,6 @@ public class BattleAllyRuntime {
     public void setSkillCooldownRemaining(int skillCooldownRemaining) { this.skillCooldownRemaining = skillCooldownRemaining; }
     public boolean isDesperationUsed() { return desperationUsed; }
     public void setDesperationUsed(boolean desperationUsed) { this.desperationUsed = desperationUsed; }
+    public int getLevel() { return level; }
+    public void setLevel(int level) { this.level = level; }
 }

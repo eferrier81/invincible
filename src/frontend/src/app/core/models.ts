@@ -15,6 +15,9 @@ export interface UserProfile {
   maxEnergy: number;
   nextEnergyAt: string | null;
   secondsUntilNextEnergy: number | null;
+  hardcoreUnlocked: boolean;
+  clearedBosses: number;
+  totalBosses: number;
 }
 
 export interface CardModel {
@@ -29,6 +32,9 @@ export interface CardModel {
   owned: boolean;
   duplicateCount?: number | null;
   abilityUpgradeIndex?: number | null;
+  level?: number | null;
+  passiveKey?: string | null;
+  passiveValue?: string | null;
   /** Relative path e.g. `/images/characters/invincible.png` */
   imageUrl?: string | null;
 }
@@ -66,6 +72,9 @@ export interface BattleAllyModel {
   skillCooldownRemaining: number;
   /** True after this hero used Desperation in this battle (phase 3 ability, once per hero). */
   desperationUsed: boolean;
+  level: number;
+  passiveKey?: string | null;
+  passiveValue?: string | null;
   imageUrl?: string | null;
 }
 

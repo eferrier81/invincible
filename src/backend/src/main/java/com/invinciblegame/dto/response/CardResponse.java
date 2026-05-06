@@ -12,6 +12,9 @@ public record CardResponse(
     boolean owned,
     Integer duplicateCount,
     Integer abilityUpgradeIndex,
+    Integer level,
+    String passiveKey,
+    String passiveValue,
     /** Web path served under `/images/...` (e.g. `/images/characters/invincible.png`). */
     String imageUrl
 ) {}

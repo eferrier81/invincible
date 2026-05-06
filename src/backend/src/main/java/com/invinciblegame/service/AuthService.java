@@ -7,6 +7,8 @@ import com.invinciblegame.dto.request.RegisterRequest;
 import com.invinciblegame.dto.response.AuthResponse;
 import com.invinciblegame.dto.response.UserProfileResponse;
 import com.invinciblegame.exception.ApiException;
+import com.invinciblegame.repository.BattleRepository;
+import com.invinciblegame.repository.BossRepository;
 import com.invinciblegame.repository.UserRepository;
 import com.invinciblegame.security.JwtUtils;
 import java.time.LocalDateTime;
@@ -22,19 +24,25 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final CurrentUserService currentUserService;
     private final EnergyService energyService;
+    private final BattleRepository battleRepository;
+    private final BossRepository bossRepository;
 
     public AuthService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         JwtUtils jwtUtils,
         CurrentUserService currentUserService,
-        EnergyService energyService
+        EnergyService energyService,
+        BattleRepository battleRepository,
+        BossRepository bossRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.currentUserService = currentUserService;
         this.energyService = energyService;
+        this.battleRepository = battleRepository;
+        this.bossRepository = bossRepository;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -75,6 +83,9 @@ public class AuthService {
         if (next != null) {
             secondsUntil = Math.max(0L, ChronoUnit.SECONDS.between(LocalDateTime.now(), next));
         }
+        long totalBosses = bossRepository.count();
+        long clearedBosses = battleRepository.countDistinctNormalWins(user.getId());
+        boolean hardcoreUnlocked = totalBosses > 0 && clearedBosses >= totalBosses;
         return new UserProfileResponse(
             user.getId(),
             user.getUsername(),
@@ -83,7 +94,10 @@ public class AuthService {
             user.getEnergy(),
             EnergyService.MAX_ENERGY,
             next != null ? next.toString() : null,
-            secondsUntil
+            secondsUntil,
+            hardcoreUnlocked,
+            (int) clearedBosses,
+            (int) totalBosses
         );
     }
 

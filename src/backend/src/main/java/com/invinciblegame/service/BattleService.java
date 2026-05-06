@@ -37,6 +37,8 @@ public class BattleService {
     private static final double DESPERATION_MULTIPLIER = 1.58;
     private static final double BOSS_CRUSH_MULT = 1.25;
     private static final double BOSS_FURY_MULT = 1.30;
+    private static final double LEVEL_STAT_STEP = 0.05;
+    private static final int PASSIVE_UNLOCK_LEVEL = 5;
 
     /** Persisted in battle state JSON when the fight ends (API `lossReason`). */
     private static final String END_BOSS_DEFEATED = "BOSS_DEFEATED";
@@ -99,12 +101,18 @@ public class BattleService {
         if (user.getEnergy() == null || user.getEnergy() < EnergyService.ENERGY_COST_PER_BATTLE) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Not enough energy");
         }
+        if (request.isHardcore() && !isHardcoreUnlocked(user.getId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Hardcore mode is locked until all normal bosses are cleared");
+        }
 
         List<CharacterCard> roster = new ArrayList<>(deck.getCharacters());
         if (roster.size() != 3) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Deck must contain exactly 3 characters for 3v1 battle");
         }
         roster.sort(Comparator.comparingInt((CharacterCard c) -> c.getSpeed() == null ? 0 : c.getSpeed()).reversed());
+
+        Map<Long, UserCharacter> ownedByCharacterId = userCharacterRepository.findByUser(user).stream()
+            .collect(Collectors.toMap(uc -> uc.getCharacter().getId(), uc -> uc, (a, b) -> a));
 
         user.setEnergy(user.getEnergy() - EnergyService.ENERGY_COST_PER_BATTLE);
         userRepository.save(user);
@@ -123,16 +131,26 @@ public class BattleService {
         List<BattleAllyRuntime> allies = new ArrayList<>();
         for (CharacterCard c : roster) {
             order.add(c.getId());
-            int maxHp = c.getMaxHp() == null ? 100 : c.getMaxHp();
+            int level = ownedByCharacterId.get(c.getId()) != null && ownedByCharacterId.get(c.getId()).getLevel() != null
+                ? ownedByCharacterId.get(c.getId()).getLevel()
+                : 1;
+            int baseMaxHp = c.getMaxHp() == null ? 100 : c.getMaxHp();
+            int baseAttack = c.getAttack() == null ? 10 : c.getAttack();
+            int baseDefense = c.getDefense() == null ? 5 : c.getDefense();
+            int maxHp = scaleStat(baseMaxHp, level);
+            int attack = scaleStat(baseAttack, level);
+            int defense = scaleStat(baseDefense, level);
             allies.add(new BattleAllyRuntime(
                 c.getId(),
                 c.getName(),
                 maxHp,
                 maxHp,
-                c.getAttack() == null ? 10 : c.getAttack(),
-                c.getDefense() == null ? 5 : c.getDefense(),
+                attack,
+                defense,
                 c.getSpeed() == null ? 5 : c.getSpeed(),
-                0
+                0,
+                false,
+                level
             ));
         }
         state.setInitiativeOrder(order);
@@ -248,7 +266,7 @@ public class BattleService {
             actor.getName() + " used " + actionLabel + " for " + dmg + " damage to the boss."
         );
 
-        emitBossPhaseTransitions(battle, state, hpBeforeHit, hpAfterHit);
+        emitBossPhaseTransitions(battle, state, hpBeforeHit, hpAfterHit, user);
 
         if (state.getBossCurrentHp() <= 0) {
             battle.setResult(BattleResult.WIN);
@@ -361,7 +379,7 @@ public class BattleService {
         return null;
     }
 
-    private void emitBossPhaseTransitions(Battle battle, BattleRuntimeState state, int hpBefore, int hpAfter) {
+    private void emitBossPhaseTransitions(Battle battle, BattleRuntimeState state, int hpBefore, int hpAfter, User user) {
         int max = state.getBossMaxHp();
         int pBefore = BattleRuntimeState.computeBossPhase(hpBefore, max);
         int pAfter = hpAfter <= 0 ? 3 : BattleRuntimeState.computeBossPhase(hpAfter, max);
@@ -372,14 +390,65 @@ public class BattleService {
                 default -> null;
             };
             if (msg != null) {
+                applyPhaseLevelUp(user, state);
                 battle.setTurnsTaken(battle.getTurnsTaken() + 1);
                 saveTurn(battle, battle.getBoss().getId(), ActionType.PHASE_EVENT, battle.getBoss().getId(), 0, msg);
             }
         }
     }
 
+    private void applyPhaseLevelUp(User user, BattleRuntimeState state) {
+        List<Long> allyIds = state.getAllies().stream()
+            .map(BattleAllyRuntime::getCharacterId)
+            .toList();
+        Map<Long, UserCharacter> byCharacterId = userCharacterRepository.findByUser(user).stream()
+            .filter(uc -> allyIds.contains(uc.getCharacter().getId()))
+            .collect(Collectors.toMap(uc -> uc.getCharacter().getId(), uc -> uc, (a, b) -> a));
+        Map<Long, CharacterCard> cardsById = cardRepository.findAllById(allyIds).stream()
+            .collect(Collectors.toMap(CharacterCard::getId, c -> c, (a, b) -> a));
+
+        List<UserCharacter> updates = new ArrayList<>();
+        for (BattleAllyRuntime ally : state.getAllies()) {
+            UserCharacter uc = byCharacterId.get(ally.getCharacterId());
+            CharacterCard card = cardsById.get(ally.getCharacterId());
+            if (uc == null || card == null) {
+                continue;
+            }
+            int currentLevel = uc.getLevel() == null ? 1 : uc.getLevel();
+            int nextLevel = currentLevel + 1;
+            uc.setLevel(nextLevel);
+            updates.add(uc);
+
+            int baseMaxHp = card.getMaxHp() == null ? 100 : card.getMaxHp();
+            int baseAttack = card.getAttack() == null ? 10 : card.getAttack();
+            int baseDefense = card.getDefense() == null ? 5 : card.getDefense();
+            int newMaxHp = scaleStat(baseMaxHp, nextLevel);
+            int newAttack = scaleStat(baseAttack, nextLevel);
+            int newDefense = scaleStat(baseDefense, nextLevel);
+
+            int oldMaxHp = ally.getMaxHp();
+            int hpDelta = newMaxHp - oldMaxHp;
+            ally.setMaxHp(newMaxHp);
+            ally.setCurrentHp(Math.min(newMaxHp, ally.getCurrentHp() + hpDelta));
+            ally.setAttack(newAttack);
+            ally.setDefense(newDefense);
+            ally.setLevel(nextLevel);
+        }
+
+        if (!updates.isEmpty()) {
+            userCharacterRepository.saveAll(updates);
+        }
+    }
+
     private static int damage(int attack, double skillMultiplier, int defenderDefense) {
         return Math.max(1, (int) Math.round(attack * skillMultiplier - defenderDefense * 0.5));
+    }
+
+    private static int scaleStat(int base, int level) {
+        int safeBase = Math.max(1, base);
+        int safeLevel = Math.max(1, level);
+        double mult = 1.0 + (LEVEL_STAT_STEP * (safeLevel - 1));
+        return Math.max(1, (int) Math.round(safeBase * mult));
     }
 
     private double skillMultiplierFor(Long userId, Long characterId) {
@@ -388,6 +457,12 @@ public class BattleService {
             .orElse(0);
         double mult = SKILL_MULTIPLIER + (SKILL_UPGRADE_STEP * upgrades);
         return Math.min(mult, SKILL_UPGRADE_CAP);
+    }
+
+    private boolean isHardcoreUnlocked(Long userId) {
+        long totalBosses = bossRepository.count();
+        long clearedBosses = battleRepository.countDistinctNormalWins(userId);
+        return totalBosses > 0 && clearedBosses >= totalBosses;
     }
 
     private static List<String> teamAbilitiesForPhase(int phase) {
@@ -527,8 +602,8 @@ public class BattleService {
                 Set<Long> allyIds = s.getAllies().stream()
                     .map(BattleAllyRuntime::getCharacterId)
                     .collect(Collectors.toSet());
-                Map<Long, String> imageByCharacterId = cardRepository.findAllById(allyIds).stream()
-                    .collect(Collectors.toMap(CharacterCard::getId, c -> c.getImageUrl(), (x, y) -> x));
+                Map<Long, CharacterCard> cardsById = cardRepository.findAllById(allyIds).stream()
+                    .collect(Collectors.toMap(CharacterCard::getId, c -> c, (x, y) -> x));
                 allies = s.getAllies().stream()
                     .map(a -> new BattleAllyResponse(
                         a.getCharacterId(),
@@ -539,8 +614,15 @@ public class BattleService {
                         a.getDefense(),
                         a.getSpeed(),
                         a.getSkillCooldownRemaining(),
-                        imageByCharacterId.get(a.getCharacterId()),
-                        a.isDesperationUsed()
+                        cardsById.get(a.getCharacterId()) != null ? cardsById.get(a.getCharacterId()).getImageUrl() : null,
+                        a.isDesperationUsed(),
+                        a.getLevel(),
+                        a.getLevel() >= PASSIVE_UNLOCK_LEVEL && cardsById.get(a.getCharacterId()) != null
+                            ? cardsById.get(a.getCharacterId()).getPassiveKey()
+                            : null,
+                        a.getLevel() >= PASSIVE_UNLOCK_LEVEL && cardsById.get(a.getCharacterId()) != null
+                            ? cardsById.get(a.getCharacterId()).getPassiveValue()
+                            : null
                     ))
                     .toList();
             } catch (JsonProcessingException ignored) {

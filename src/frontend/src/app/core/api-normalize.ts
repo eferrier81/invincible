@@ -57,6 +57,9 @@ export function normalizeCard(r: Record<string, unknown>): CardModel {
     owned: Boolean(r["owned"]),
     duplicateCount: numOrNull(r["duplicateCount"] ?? r["duplicate_count"]),
     abilityUpgradeIndex: numOrNull(r["abilityUpgradeIndex"] ?? r["ability_upgrade_index"]),
+    level: numOrNull(r["level"]),
+    passiveKey: pickStr(r["passiveKey"], r["passive_key"]),
+    passiveValue: pickStr(r["passiveValue"], r["passive_value"]),
     imageUrl: pickStr(r["imageUrl"], r["image_url"]),
   };
 }
@@ -72,6 +75,9 @@ export function normalizeBattleAlly(a: Record<string, unknown>): BattleAllyModel
     speed: num(a["speed"]),
     skillCooldownRemaining: num(a["skillCooldownRemaining"] ?? a["skill_cooldown_remaining"]),
     desperationUsed: Boolean(a["desperationUsed"] ?? a["desperation_used"]),
+    level: num(a["level"], 1),
+    passiveKey: pickStr(a["passiveKey"], a["passive_key"]),
+    passiveValue: pickStr(a["passiveValue"], a["passive_value"]),
     imageUrl: pickStr(a["imageUrl"], a["image_url"]),
   };
 }

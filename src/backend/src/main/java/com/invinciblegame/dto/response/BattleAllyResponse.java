@@ -10,5 +10,8 @@ public record BattleAllyResponse(
     int speed,
     int skillCooldownRemaining,
     String imageUrl,
-    boolean desperationUsed
+    boolean desperationUsed,
+    int level,
+    String passiveKey,
+    String passiveValue
 ) {}

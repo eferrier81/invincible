@@ -29,6 +29,8 @@ import { imageSrc } from "../../core/image-url";
           <h3 class="char-card__title">{{ c.name }} <small>{{ c.rarity }}</small></h3>
           <p class="char-card__meta">{{ c.faction }}</p>
           <p class="char-card__stats">HP {{ c.maxHp }} · ATK {{ c.attack }} · DEF {{ c.defense }} · SPD {{ c.speed }}</p>
+          <p *ngIf="c.owned" class="char-card__level">Level {{ c.level ?? 1 }}</p>
+          <p *ngIf="c.passiveKey" class="char-card__passive">Passive: <strong>{{ c.passiveKey }}</strong> — {{ c.passiveValue }}</p>
           <p class="char-card__owned" [class.char-card__owned--yes]="c.owned">{{ c.owned ? "Owned" : "Not owned" }}</p>
           <p *ngIf="c.owned" class="char-card__upgrade">Skill upgrades: +{{ upgradeBonusPercent(c) }}%</p>
         </div>
@@ -102,6 +104,17 @@ import { imageSrc } from "../../core/image-url";
         font-size: 0.88rem;
         color: #455a64;
         line-height: 1.4;
+      }
+      .char-card__level {
+        margin: 0 0 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #455a64;
+      }
+      .char-card__passive {
+        margin: 0 0 8px;
+        font-size: 0.85rem;
+        color: #37474f;
       }
       .char-card__owned {
         margin: auto 0 0;

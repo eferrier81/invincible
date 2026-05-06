@@ -52,7 +52,12 @@ import { imageSrc } from "../../core/image-url";
             <option *ngFor="let d of decks" [value]="d.id">{{ d.id }} — {{ d.name }}</option>
           </select>
         </div>
-        <label><input type="checkbox" formControlName="isHardcore" /> Hardcore</label><br />
+        <label>
+          <input type="checkbox" formControlName="isHardcore" [disabled]="!profile?.hardcoreUnlocked" /> Hardcore
+        </label>
+        <p *ngIf="profile && !profile.hardcoreUnlocked" class="hint">
+          Unlock hardcore by clearing all normal bosses ({{ profile.clearedBosses }}/{{ profile.totalBosses }}).
+        </p>
         <button type="submit" [disabled]="!canStartBattle()">Start battle</button>
       </form>
       <p *ngIf="error" class="form-error-battle">{{ error }}</p>
@@ -174,7 +179,9 @@ import { imageSrc } from "../../core/image-url";
             </ng-template>
           </div>
           <h5>{{ a.name }}</h5>
-          <p class="stats">ATK {{ a.attack }} · DEF {{ a.defense }} · SPD {{ a.speed }}</p>
+           <p class="stats">ATK {{ a.attack }} · DEF {{ a.defense }} · SPD {{ a.speed }}</p>
+           <p class="stats">Level {{ a.level }}</p>
+           <p *ngIf="a.passiveKey" class="stats passive">Passive: <strong>{{ a.passiveKey }}</strong> — {{ a.passiveValue }}</p>
           <p>HP: {{ a.currentHp }} / {{ a.maxHp }}</p>
           <div class="bar"><div class="fill ally" [style.width.%]="allyHpPercent(a)"></div></div>
           <p *ngIf="a.skillCooldownRemaining > 0" class="cd">Skill CD: {{ a.skillCooldownRemaining }}</p>
@@ -383,6 +390,9 @@ import { imageSrc } from "../../core/image-url";
         font-size: 0.85rem;
         color: #666;
         margin: 0;
+      }
+      .stats.passive {
+        color: #37474f;
       }
       .cd {
         font-size: 0.85rem;
@@ -632,6 +642,10 @@ export class BattleComponent implements OnInit {
 
   startBattle(): void {
     const raw = this.startForm.getRawValue();
+    if (raw.isHardcore && this.profile && !this.profile.hardcoreUnlocked) {
+      this.error = "Hardcore mode is locked until all normal bosses are cleared";
+      return;
+    }
     this.api
       .startBattle({
         bossId: Number(raw.bossId),
