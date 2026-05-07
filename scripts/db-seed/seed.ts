@@ -336,7 +336,16 @@ async function main(): Promise<void> {
     console.log("DB_HOST=db → using localhost for seed (set SEED_USE_DOCKER_DB=1 if you run this inside Docker).");
   }
 
-  const conn = await mysql.createConnection({ host, port, database, user, password });
+  const conn = await mysql.createConnection({
+  host,
+  port,
+  database,
+  user,
+  password,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
   try {
     const playableCol = await detectPlayableColumn(conn);
 
