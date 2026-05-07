@@ -45,10 +45,6 @@ import { imageSrc } from "../../core/image-url";
         gap: 8px;
         margin-bottom: 8px;
       }
-      .form-error {
-        color: #b00020;
-        margin: 0;
-      }
       .collection-grid {
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
       }

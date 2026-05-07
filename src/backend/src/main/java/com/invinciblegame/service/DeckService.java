@@ -4,6 +4,7 @@ import com.invinciblegame.domain.entity.Deck;
 import com.invinciblegame.dto.request.DeckRequest;
 import com.invinciblegame.dto.response.DeckResponse;
 import com.invinciblegame.exception.ApiException;
+import com.invinciblegame.mapper.DeckMapper;
 import com.invinciblegame.repository.CharacterCardRepository;
 import com.invinciblegame.repository.DeckRepository;
 import com.invinciblegame.repository.UserCharacterRepository;
@@ -18,22 +19,25 @@ public class DeckService {
     private final CharacterCardRepository cardRepository;
     private final UserCharacterRepository userCharacterRepository;
     private final CurrentUserService currentUserService;
+    private final DeckMapper deckMapper;
 
     public DeckService(
         DeckRepository deckRepository,
         CharacterCardRepository cardRepository,
         UserCharacterRepository userCharacterRepository,
-        CurrentUserService currentUserService
+        CurrentUserService currentUserService,
+        DeckMapper deckMapper
     ) {
         this.deckRepository = deckRepository;
         this.cardRepository = cardRepository;
         this.userCharacterRepository = userCharacterRepository;
         this.currentUserService = currentUserService;
+        this.deckMapper = deckMapper;
     }
 
     public List<DeckResponse> findAll() {
         Long userId = currentUserService.requireCurrentUser().getId();
-        return deckRepository.findByUserId(userId).stream().map(this::toResponse).toList();
+        return deckRepository.findByUserId(userId).stream().map(deckMapper::toResponse).toList();
     }
 
     public DeckResponse create(DeckRequest request) {
@@ -42,29 +46,30 @@ public class DeckService {
         Deck deck = new Deck();
         deck.setUser(user);
         updateDeckFromRequest(deck, request);
-        return toResponse(deckRepository.save(deck));
+        return deckMapper.toResponse(deckRepository.save(deck));
     }
 
     public DeckResponse update(Long id, DeckRequest request) {
         var user = currentUserService.requireCurrentUser();
-        Deck deck = deckRepository.findById(id)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Deck not found"));
-        if (!deck.getUser().getId().equals(user.getId())) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Cannot edit another user's deck");
-        }
+        Deck deck = findOwnedDeck(user.getId(), id, "Cannot edit another user's deck");
         validateDeckRequest(user.getId(), request, id);
         updateDeckFromRequest(deck, request);
-        return toResponse(deckRepository.save(deck));
+        return deckMapper.toResponse(deckRepository.save(deck));
     }
 
     public void delete(Long id) {
         var user = currentUserService.requireCurrentUser();
-        Deck deck = deckRepository.findById(id)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Deck not found"));
-        if (!deck.getUser().getId().equals(user.getId())) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Cannot delete another user's deck");
-        }
+        Deck deck = findOwnedDeck(user.getId(), id, "Cannot delete another user's deck");
         deckRepository.delete(deck);
+    }
+
+    private Deck findOwnedDeck(Long userId, Long deckId, String forbiddenMessage) {
+        Deck deck = deckRepository.findById(deckId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Deck not found"));
+        if (!deck.getUser().getId().equals(userId)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, forbiddenMessage);
+        }
+        return deck;
     }
 
     private void validateDeckRequest(Long userId, DeckRequest request, Long existingDeckId) {
@@ -100,13 +105,4 @@ public class DeckService {
         deck.setCharacters(new HashSet<>(cardRepository.findAllById(request.characterIds())));
     }
 
-    private DeckResponse toResponse(Deck deck) {
-        return new DeckResponse(
-            deck.getId(),
-            deck.getName(),
-            deck.getDescription(),
-            deck.getSlotNumber(),
-            deck.getCharacters().stream().map(c -> c.getId()).toList()
-        );
-    }
 }

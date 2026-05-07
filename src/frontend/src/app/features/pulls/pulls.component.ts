@@ -52,47 +52,7 @@ import { imageSrc } from "../../core/image-url";
         margin: 0;
       }
       .form-error {
-        color: #b00020;
         margin: 8px 0 0;
-      }
-      .reward-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 12px;
-      }
-      .reward-card {
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 8px;
-        background: #fff;
-      }
-      .reward-card__img {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 8px;
-        margin-bottom: 6px;
-      }
-      .reward-card__ph {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 8px;
-        margin-bottom: 6px;
-      }
-      .reward-card__text {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        font-size: 0.9rem;
-      }
-      .reward-card__rarity {
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        font-size: 0.75rem;
-        color: #5c6bc0;
-      }
-      .reward-card__dup {
-        font-size: 0.75rem;
-        color: #455a64;
       }
     `,
   ],

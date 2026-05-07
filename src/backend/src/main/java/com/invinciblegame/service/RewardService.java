@@ -4,18 +4,19 @@ import com.invinciblegame.domain.entity.CharacterCard;
 import com.invinciblegame.domain.entity.User;
 import com.invinciblegame.domain.entity.UserCharacter;
 import com.invinciblegame.dto.response.CardResponse;
+import com.invinciblegame.mapper.CardMapper;
 import com.invinciblegame.repository.UserCharacterRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RewardService {
-    private static final int PASSIVE_UNLOCK_LEVEL = 5;
-
     private final UserCharacterRepository userCharacterRepository;
+    private final CardMapper cardMapper;
 
-    public RewardService(UserCharacterRepository userCharacterRepository) {
+    public RewardService(UserCharacterRepository userCharacterRepository, CardMapper cardMapper) {
         this.userCharacterRepository = userCharacterRepository;
+        this.cardMapper = cardMapper;
     }
 
     public void grantCard(User user, CharacterCard card) {
@@ -38,37 +39,16 @@ public class RewardService {
         return cards.stream()
             .map(card -> {
                 var uc = userCharacterRepository.findByUserIdAndCharacterId(userId, card.getId()).orElse(null);
-                return toResponse(card, uc != null, uc);
+                return cardMapper.toResponse(card, uc != null, uc);
             })
             .toList();
     }
 
     public CardResponse toResponse(CharacterCard card, boolean owned, UserCharacter uc) {
-        Integer dup = uc != null ? uc.getDuplicateCount() : null;
-        Integer upgrade = uc != null ? uc.getAbilityUpgradeIndex() : null;
-        Integer level = uc != null ? uc.getLevel() : null;
-        String passiveKey = level != null && level >= PASSIVE_UNLOCK_LEVEL ? card.getPassiveKey() : null;
-        String passiveValue = level != null && level >= PASSIVE_UNLOCK_LEVEL ? card.getPassiveValue() : null;
-        return new CardResponse(
-            card.getId(),
-            card.getName(),
-            card.getRarity() != null ? card.getRarity().name() : null,
-            card.getFaction(),
-            card.getMaxHp(),
-            card.getAttack(),
-            card.getDefense(),
-            card.getSpeed(),
-            owned,
-            dup,
-            upgrade,
-            level,
-            passiveKey,
-            passiveValue,
-            card.getImageUrl()
-        );
+        return cardMapper.toResponse(card, owned, uc);
     }
 
     public CardResponse toResponse(CharacterCard card, boolean owned) {
-        return toResponse(card, owned, null);
+        return cardMapper.toResponse(card, owned);
     }
 }

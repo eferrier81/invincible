@@ -6,7 +6,6 @@ import com.invinciblegame.dto.response.PullResultResponse;
 import com.invinciblegame.dto.response.PullStatusResponse;
 import com.invinciblegame.exception.ApiException;
 import com.invinciblegame.repository.UserRepository;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -22,22 +21,25 @@ public class PullService {
     private final RewardService rewardService;
     private final CurrentUserService currentUserService;
     private final UserRepository userRepository;
+    private final PullStatusService pullStatusService;
 
     public PullService(
         PackService packService,
         RewardService rewardService,
         CurrentUserService currentUserService,
-        UserRepository userRepository
+        UserRepository userRepository,
+        PullStatusService pullStatusService
     ) {
         this.packService = packService;
         this.rewardService = rewardService;
         this.currentUserService = currentUserService;
         this.userRepository = userRepository;
+        this.pullStatusService = pullStatusService;
     }
 
     public PullStatusResponse status() {
         User user = currentUserService.requireCurrentUser();
-        return buildStatus(user);
+        return pullStatusService.buildStatus(user);
     }
 
     @Transactional
@@ -47,53 +49,36 @@ public class PullService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Welcome pull already claimed");
         }
         List<CharacterCard> pack = packService.generatePack(WELCOME_COUNT, false);
-        for (CharacterCard card : pack) {
-            rewardService.grantCard(user, card);
-        }
+        grantPack(user, pack);
         user.setWelcomePullClaimed(true);
         userRepository.save(user);
         return new PullResultResponse(
             "WELCOME",
             pack.stream().map(c -> rewardService.toResponse(c, true)).toList(),
-            buildStatus(user)
+            pullStatusService.buildStatus(user)
         );
     }
 
     @Transactional
     public PullResultResponse dailyPull() {
         User user = currentUserService.requireCurrentUser();
-        if (!isDailyAvailable(user)) {
+        if (!pullStatusService.isDailyAvailable(user)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Daily pull already claimed today");
         }
         List<CharacterCard> pack = packService.generatePack(DAILY_COUNT, true);
-        for (CharacterCard card : pack) {
-            rewardService.grantCard(user, card);
-        }
+        grantPack(user, pack);
         user.setLastDailyPullAt(LocalDateTime.now());
         userRepository.save(user);
         return new PullResultResponse(
             "DAILY",
             pack.stream().map(c -> rewardService.toResponse(c, true)).toList(),
-            buildStatus(user)
+            pullStatusService.buildStatus(user)
         );
     }
 
-    private PullStatusResponse buildStatus(User user) {
-        boolean welcomeAvailable = !Boolean.TRUE.equals(user.getWelcomePullClaimed());
-        boolean dailyAvailable = isDailyAvailable(user);
-        LocalDateTime nextDaily = dailyAvailable || user.getLastDailyPullAt() == null
-            ? null
-            : user.getLastDailyPullAt().toLocalDate().plusDays(1).atStartOfDay();
-        return new PullStatusResponse(
-            welcomeAvailable,
-            dailyAvailable,
-            nextDaily != null ? nextDaily.toString() : null
-        );
-    }
-
-    private boolean isDailyAvailable(User user) {
-        if (user.getLastDailyPullAt() == null) return true;
-        LocalDate last = user.getLastDailyPullAt().toLocalDate();
-        return last.isBefore(LocalDate.now());
+    private void grantPack(User user, List<CharacterCard> pack) {
+        for (CharacterCard card : pack) {
+            rewardService.grantCard(user, card);
+        }
     }
 }

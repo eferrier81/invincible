@@ -5,6 +5,21 @@ import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel, DeckModel } from "../../core/models";
 import { imageSrc } from "../../core/image-url";
 
+const parseDeckIds = (raw: unknown): number[] => {
+  return String(raw ?? "")
+    .split(",")
+    .map((s) => Number(s.trim()))
+    .filter((n) => !Number.isNaN(n));
+};
+
+const deckIdsValidator = (control: AbstractControl): ValidationErrors | null => {
+  const ids = parseDeckIds(control.value);
+  if (ids.length !== 3) {
+    return { count: true };
+  }
+  return new Set(ids).size === 3 ? null : { distinct: true };
+};
+
 @Component({
   standalone: true,
   imports: [ReactiveFormsModule, NgFor, NgIf],
@@ -66,10 +81,6 @@ import { imageSrc } from "../../core/image-url";
   `,
   styles: [
     `
-      .form-error {
-        color: #b00020;
-        margin: 0;
-      }
       .owned-grid {
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
       }
@@ -132,7 +143,7 @@ export class DecksComponent {
     name: ["", Validators.required],
     description: [""],
     slotNumber: [1, Validators.required],
-    characterIdsCsv: ["", [Validators.required, this.threeIdsValidator]],
+    characterIdsCsv: ["", [Validators.required, deckIdsValidator]],
   });
 
   constructor(private readonly api: GameApiService, private readonly fb: FormBuilder) {
@@ -146,10 +157,7 @@ export class DecksComponent {
       return;
     }
     const raw = this.form.getRawValue();
-    const ids = (raw.characterIdsCsv ?? "")
-      .split(",")
-      .map((s) => Number(s.trim()))
-      .filter((n) => !Number.isNaN(n));
+    const ids = parseDeckIds(raw.characterIdsCsv ?? "");
     this.api
       .createDeck({
         name: raw.name ?? "",
@@ -182,20 +190,6 @@ export class DecksComponent {
 
   get canCreateDeck(): boolean {
     return this.decks.length < 3;
-  }
-
-  private threeIdsValidator(control: AbstractControl): ValidationErrors | null {
-    const raw = String(control.value ?? "");
-    const ids = raw
-      .split(",")
-      .map((s) => Number(s.trim()))
-      .filter((n) => !Number.isNaN(n));
-
-    if (ids.length !== 3) {
-      return { count: true };
-    }
-
-    return new Set(ids).size === 3 ? null : { distinct: true };
   }
 
   img(c: CardModel): string | null {

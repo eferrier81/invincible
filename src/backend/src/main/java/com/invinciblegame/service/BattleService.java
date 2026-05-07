@@ -101,9 +101,6 @@ public class BattleService {
         if (user.getEnergy() == null || user.getEnergy() < EnergyService.ENERGY_COST_PER_BATTLE) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Not enough energy");
         }
-        if (request.isHardcore() && !isHardcoreUnlocked(user.getId())) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Hardcore mode is locked until all normal bosses are cleared");
-        }
 
         List<CharacterCard> roster = new ArrayList<>(deck.getCharacters());
         if (roster.size() != 3) {
@@ -457,12 +454,6 @@ public class BattleService {
             .orElse(0);
         double mult = SKILL_MULTIPLIER + (SKILL_UPGRADE_STEP * upgrades);
         return Math.min(mult, SKILL_UPGRADE_CAP);
-    }
-
-    private boolean isHardcoreUnlocked(Long userId) {
-        long totalBosses = bossRepository.count();
-        long clearedBosses = battleRepository.countDistinctNormalWins(userId);
-        return totalBosses > 0 && clearedBosses >= totalBosses;
     }
 
     private static List<String> teamAbilitiesForPhase(int phase) {
