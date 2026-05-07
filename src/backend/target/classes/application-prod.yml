@@ -3,12 +3,18 @@ spring:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,metrics
+  jackson:
+    serialization:
+      indent_output: true
+
+server:
+  port: ${PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION_MS}
