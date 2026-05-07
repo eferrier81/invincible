@@ -6,7 +6,6 @@ import { BattleAllyModel, BattleModel, BossModel, CardModel, DeckModel, UserProf
 import { GameApiService } from "../../core/services/game-api.service";
 import { AuthService } from "../../core/services/auth.service";
 import { imageSrc } from "../../core/image-url";
-import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -449,7 +448,6 @@ export class BattleComponent implements OnInit {
   profile?: UserProfile;
   error = "";
   selectedRewardId: number | null = null;
-  readonly imageBase = environment.apiUrl;
 
   startForm = this.fb.group({
     bossId: [1],
@@ -596,13 +594,11 @@ export class BattleComponent implements OnInit {
   }
 
   bossBattleImage(): string | null {
-    const path = this.battle ? imageSrc(this.battle.bossImageUrl) : null;
-    return path ? `${this.imageBase}${path}` : null;
+    return this.battle ? imageSrc(this.battle.bossImageUrl) : null;
   }
 
   allyImage(a: BattleAllyModel): string | null {
-    const path = imageSrc(a.imageUrl);
-    return path ? `${this.imageBase}${path}` : null;
+    return imageSrc(a.imageUrl);
   }
 
   previewBoss(): BossModel | undefined {
@@ -613,8 +609,7 @@ export class BattleComponent implements OnInit {
   }
 
   bossPortrait(b: BossModel): string | null {
-    const path = imageSrc(b.imageUrl);
-    return path ? `${this.imageBase}${path}` : null;
+    return imageSrc(b.imageUrl);
   }
 
   startBattle(): void {
@@ -698,7 +693,6 @@ export class BattleComponent implements OnInit {
   }
 
   rewardImage(c: CardModel): string | null {
-    const path = imageSrc(c.imageUrl);
-    return path ? `${this.imageBase}${path}` : null;
+    return imageSrc(c.imageUrl);
   }
 }

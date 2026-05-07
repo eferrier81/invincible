@@ -3,7 +3,6 @@ import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel, PullResultModel, PullStatusModel } from "../../core/models";
 import { imageSrc } from "../../core/image-url";
-import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -62,7 +61,6 @@ export class PullsComponent implements OnInit {
   status?: PullStatusModel;
   lastResult?: PullResultModel;
   error = "";
-  readonly imageBase = environment.apiUrl;
 
   constructor(private readonly api: GameApiService) {}
 
@@ -103,7 +101,6 @@ export class PullsComponent implements OnInit {
   }
 
   img(c: CardModel): string | null {
-    const path = imageSrc(c.imageUrl);
-    return path ? `${this.imageBase}${path}` : null;
+    return imageSrc(c.imageUrl);
   }
 }

@@ -3,7 +3,6 @@ import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel } from "../../core/models";
 import { imageSrc } from "../../core/image-url";
-import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -156,7 +155,6 @@ import { environment } from "../../../environments/environment";
 export class CollectionComponent {
   cards: CardModel[] = [];
   error = "";
-  readonly imageBase = environment.apiUrl;
 
   constructor(private readonly api: GameApiService) {
     this.load(true);
@@ -170,8 +168,7 @@ export class CollectionComponent {
   }
 
   img(c: CardModel): string | null {
-    const path = imageSrc(c.imageUrl);
-    return path ? `${this.imageBase}${path}` : null;
+    return imageSrc(c.imageUrl);
   }
 
   upgradeBonusPercent(c: CardModel): number {
