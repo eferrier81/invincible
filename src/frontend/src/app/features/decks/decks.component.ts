@@ -4,6 +4,7 @@ import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel, DeckModel } from "../../core/models";
 import { imageSrc } from "../../core/image-url";
+import { environment } from "../../../environments/environment";
 
 const parseDeckIds = (raw: unknown): number[] => {
   return String(raw ?? "")
@@ -376,6 +377,7 @@ export class DecksComponent {
   decks: DeckModel[] = [];
   ownedCards: CardModel[] = [];
   error = "";
+  readonly imageBase = environment.apiUrl;
 
   form = this.fb.group({
     name: ["", Validators.required],
@@ -431,7 +433,8 @@ export class DecksComponent {
   }
 
   img(c: CardModel): string | null {
-    return imageSrc(c.imageUrl);
+    const path = imageSrc(c.imageUrl);
+    return path ? `${this.imageBase}${path}` : null;
   }
 
   getCharacterName(charId: number): string {

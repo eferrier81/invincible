@@ -4,6 +4,7 @@ import { RouterLink } from "@angular/router";
 import { GameApiService } from "../../core/services/game-api.service";
 import { BossModel } from "../../core/models";
 import { imageSrc } from "../../core/image-url";
+import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -91,9 +92,11 @@ import { imageSrc } from "../../core/image-url";
 export class BossesComponent {
   bosses: BossModel[] = [];
   error = "";
+  readonly imageBase = environment.apiUrl;
 
   img(b: BossModel): string | null {
-    return imageSrc(b.imageUrl);
+    const path = imageSrc(b.imageUrl);
+    return path ? `${this.imageBase}${path}` : null;
   }
 
   constructor(private readonly api: GameApiService) {
