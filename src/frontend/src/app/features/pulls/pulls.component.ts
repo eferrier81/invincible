@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel, PullResultModel, PullStatusModel } from "../../core/models";
-import { imageSrc } from "../../core/image-url";
+import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -24,7 +24,7 @@ import { imageSrc } from "../../core/image-url";
       <div class="reward-grid">
         <div class="reward-card" *ngFor="let c of lastResult.cards">
           <div class="entity-media">
-            <img *ngIf="img(c); else noImage" class="img-entity reward-card__img" [src]="img(c)!" [alt]="c.name" />
+            <img *ngIf="c.imageUrl; else noImage" class="img-entity reward-card__img" [src]="imageBase + c.imageUrl" [alt]="c.name" />
             <ng-template #noImage>
               <div class="entity-placeholder reward-card__ph">{{ c.name.slice(0, 2) }}</div>
             </ng-template>
@@ -58,6 +58,7 @@ import { imageSrc } from "../../core/image-url";
   ],
 })
 export class PullsComponent implements OnInit {
+  imageBase = environment.apiUrl;
   status?: PullStatusModel;
   lastResult?: PullResultModel;
   error = "";
@@ -100,7 +101,4 @@ export class PullsComponent implements OnInit {
     });
   }
 
-  img(c: CardModel): string | null {
-    return imageSrc(c.imageUrl);
-  }
 }

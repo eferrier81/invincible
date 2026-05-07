@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel, DeckModel } from "../../core/models";
-import { imageSrc } from "../../core/image-url";
+import { environment } from "../../../environments/environment";
 
 const parseDeckIds = (raw: unknown): number[] => {
   return String(raw ?? "")
@@ -101,7 +101,7 @@ const deckIdsValidator = (control: AbstractControl): ValidationErrors | null => 
         <div class="owned-grid">
           <div class="owned-tile" *ngFor="let c of ownedCards" (click)="addToInput(c.id)">
             <div class="entity-media">
-              <img *ngIf="img(c); else noMini" class="img-entity owned-tile__img" [src]="img(c)!" [alt]="c.name" loading="lazy" />
+              <img *ngIf="c.imageUrl; else noMini" class="img-entity owned-tile__img" [src]="imageBase + c.imageUrl" [alt]="c.name" loading="lazy" />
               <ng-template #noMini>
                 <div class="entity-placeholder owned-tile__ph">{{ c.name.slice(0, 2) }}</div>
               </ng-template>
@@ -373,6 +373,7 @@ const deckIdsValidator = (control: AbstractControl): ValidationErrors | null => 
   ],
 })
 export class DecksComponent {
+  imageBase = environment.apiUrl;
   decks: DeckModel[] = [];
   ownedCards: CardModel[] = [];
   error = "";
@@ -430,9 +431,6 @@ export class DecksComponent {
     return this.decks.length < 3;
   }
 
-  img(c: CardModel): string | null {
-    return imageSrc(c.imageUrl);
-  }
 
   getCharacterName(charId: number): string {
     const card = this.ownedCards.find((c) => c.id === charId);

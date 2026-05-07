@@ -2,7 +2,7 @@ import { Component } from "@angular/core";
 import { NgFor, NgIf } from "@angular/common";
 import { GameApiService } from "../../core/services/game-api.service";
 import { CardModel } from "../../core/models";
-import { imageSrc } from "../../core/image-url";
+import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -22,7 +22,7 @@ import { imageSrc } from "../../core/image-url";
     <div class="grid-responsive collection-grid">
       <article class="card char-card" *ngFor="let c of cards">
         <div class="char-card__media entity-media entity-media--fill">
-          <img *ngIf="img(c); else noChar" class="img-entity char-card__img" [src]="img(c)!" [alt]="c.name" loading="lazy" />
+          <img *ngIf="c.imageUrl; else noChar" class="img-entity char-card__img" [src]="imageBase + c.imageUrl" [alt]="c.name" loading="lazy" />
           <ng-template #noChar>
             <div class="entity-placeholder char-card__placeholder">No image</div>
           </ng-template>
@@ -153,6 +153,7 @@ import { imageSrc } from "../../core/image-url";
   ],
 })
 export class CollectionComponent {
+  imageBase = environment.apiUrl;
   cards: CardModel[] = [];
   error = "";
 
@@ -165,10 +166,6 @@ export class CollectionComponent {
       next: (res) => (this.cards = res),
       error: (err) => (this.error = err?.error?.error ?? "Failed to load cards"),
     });
-  }
-
-  img(c: CardModel): string | null {
-    return imageSrc(c.imageUrl);
   }
 
   upgradeBonusPercent(c: CardModel): number {

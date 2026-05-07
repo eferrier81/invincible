@@ -3,7 +3,7 @@ import { NgFor, NgIf } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { GameApiService } from "../../core/services/game-api.service";
 import { BossModel } from "../../core/models";
-import { imageSrc } from "../../core/image-url";
+import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -18,7 +18,7 @@ import { imageSrc } from "../../core/image-url";
       <section class="card boss-card" *ngFor="let b of bosses">
         <div class="boss-card__inner">
           <div class="entity-media">
-            <img *ngIf="img(b); else noBoss" class="img-entity img-entity--1x1" [src]="img(b)!" [alt]="b.name" loading="lazy" />
+            <img *ngIf="b.imageUrl; else noBoss" class="img-entity img-entity--1x1" [src]="imageBase + b.imageUrl" [alt]="b.name" loading="lazy" />
             <ng-template #noBoss>
               <div class="entity-placeholder">No image</div>
             </ng-template>
@@ -89,12 +89,9 @@ import { imageSrc } from "../../core/image-url";
   ],
 })
 export class BossesComponent {
+  imageBase = environment.apiUrl;
   bosses: BossModel[] = [];
   error = "";
-
-  img(b: BossModel): string | null {
-    return imageSrc(b.imageUrl);
-  }
 
   constructor(private readonly api: GameApiService) {
     this.api.getBosses().subscribe({

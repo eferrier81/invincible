@@ -5,7 +5,7 @@ import { ActivatedRoute } from "@angular/router";
 import { BattleAllyModel, BattleModel, BossModel, CardModel, DeckModel, UserProfile } from "../../core/models";
 import { GameApiService } from "../../core/services/game-api.service";
 import { AuthService } from "../../core/services/auth.service";
-import { imageSrc } from "../../core/image-url";
+import { environment } from "../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -33,9 +33,9 @@ import { imageSrc } from "../../core/image-url";
           <div class="start-preview" *ngIf="previewBoss() as pb">
             <div class="entity-media">
               <img
-                *ngIf="bossPortrait(pb); else noPreviewBoss"
+                *ngIf="pb.imageUrl; else noPreviewBoss"
                 class="img-entity img-entity--1x1 start-preview__img"
-                [src]="bossPortrait(pb)!"
+                [src]="imageBase + pb.imageUrl"
                 [alt]="pb.name"
                 loading="lazy"
               />
@@ -87,7 +87,7 @@ import { imageSrc } from "../../core/image-url";
             (click)="selectReward(c.id)"
           >
             <div class="entity-media">
-              <img *ngIf="rewardImage(c); else noRewardImage" class="img-entity reward-card__img" [src]="rewardImage(c)!" [alt]="c.name" />
+              <img *ngIf="c.imageUrl; else noRewardImage" class="img-entity reward-card__img" [src]="imageBase + c.imageUrl" [alt]="c.name" />
               <ng-template #noRewardImage>
                 <div class="entity-placeholder reward-card__ph">{{ c.name.slice(0, 2) }}</div>
               </ng-template>
@@ -117,9 +117,9 @@ import { imageSrc } from "../../core/image-url";
         <div class="boss-row">
           <div class="entity-media">
             <img
-              *ngIf="bossBattleImage(); else noBattleBoss"
+              *ngIf="battle.bossImageUrl; else noBattleBoss"
               class="img-entity img-entity--4x3 boss-panel__img"
-              [src]="bossBattleImage()!"
+              [src]="imageBase + battle.bossImageUrl"
               alt="Boss"
               loading="lazy"
             />
@@ -168,9 +168,9 @@ import { imageSrc } from "../../core/image-url";
         >
           <div class="entity-media entity-media--fill">
             <img
-              *ngIf="allyImage(a); else noAlly"
+              *ngIf="a.imageUrl; else noAlly"
               class="img-entity ally-card__img"
-              [src]="allyImage(a)!"
+              [src]="imageBase + a.imageUrl"
               [alt]="a.name"
               loading="lazy"
             />
@@ -442,6 +442,7 @@ import { imageSrc } from "../../core/image-url";
   ],
 })
 export class BattleComponent implements OnInit {
+  imageBase = environment.apiUrl;
   bosses: BossModel[] = [];
   decks: DeckModel[] = [];
   battle?: BattleModel;
@@ -593,23 +594,11 @@ export class BattleComponent implements OnInit {
     return `Skill on cooldown (${a?.skillCooldownRemaining ?? 0}): use Attack until it reaches 0`;
   }
 
-  bossBattleImage(): string | null {
-    return this.battle ? imageSrc(this.battle.bossImageUrl) : null;
-  }
-
-  allyImage(a: BattleAllyModel): string | null {
-    return imageSrc(a.imageUrl);
-  }
-
   previewBoss(): BossModel | undefined {
     const raw = this.startForm.get("bossId")?.value;
     const id = Number(raw);
     if (Number.isNaN(id)) return undefined;
     return this.bosses.find((b) => b.id === id);
-  }
-
-  bossPortrait(b: BossModel): string | null {
-    return imageSrc(b.imageUrl);
   }
 
   startBattle(): void {
@@ -692,7 +681,4 @@ export class BattleComponent implements OnInit {
     });
   }
 
-  rewardImage(c: CardModel): string | null {
-    return imageSrc(c.imageUrl);
-  }
 }
