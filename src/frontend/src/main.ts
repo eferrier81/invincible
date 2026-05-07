@@ -14,19 +14,23 @@ import { AuthService } from "./app/core/services/auth.service";
   template: `
     <header class="topbar">
       <nav class="nav">
-        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-        <a routerLink="/collection" routerLinkActive="active" *ngIf="isLoggedIn()">Collection</a>
-        <a routerLink="/decks" routerLinkActive="active" *ngIf="isLoggedIn()">Decks</a>
-        <a routerLink="/bosses" routerLinkActive="active" *ngIf="isLoggedIn()">Bosses</a>
-        <a routerLink="/battle" routerLinkActive="active" *ngIf="isLoggedIn()">Battle</a>
-        <a routerLink="/pulls" routerLinkActive="active" *ngIf="isLoggedIn()">Pulls / Packs</a>
-        <a routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin()">Admin</a>
-        <a routerLink="/login" routerLinkActive="active" *ngIf="!isLoggedIn()">Login</a>
-        <a routerLink="/register" routerLinkActive="active" *ngIf="!isLoggedIn()">Register</a>
+        <ng-container *ngIf="isLoggedIn(); else guestNav">
+          <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+          <a routerLink="/collection" routerLinkActive="active">Collection</a>
+          <a routerLink="/decks" routerLinkActive="active">Decks</a>
+          <a routerLink="/bosses" routerLinkActive="active">Bosses</a>
+          <a routerLink="/battle" routerLinkActive="active">Battle</a>
+          <a routerLink="/pulls" routerLinkActive="active">Pulls</a>
+          <a routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin()">Admin</a>
+        </ng-container>
+        <ng-template #guestNav>
+          <a routerLink="/login" routerLinkActive="active">Login</a>
+          <a routerLink="/register" routerLinkActive="active">Register</a>
+        </ng-template>
       </nav>
       <div class="topbar-right">
         <span class="energy-badge" *ngIf="isLoggedIn() && energyHeader">{{ energyHeader }}</span>
-        <button *ngIf="isLoggedIn()" (click)="logout()">Logout</button>
+        <button *ngIf="isLoggedIn()" (click)="logout()" class="secondary">Logout</button>
       </div>
     </header>
     <main class="page">

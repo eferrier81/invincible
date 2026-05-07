@@ -8,23 +8,110 @@ import { NgIf } from "@angular/common";
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, NgIf],
   template: `
-    <section class="card">
-      <h2>Login</h2>
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        <div>
-          <label>Username</label><br />
-          <input formControlName="username" />
+    <div class="auth-container">
+      <section class="card auth-card">
+        <div class="auth-header">
+          <h1>Welcome Back</h1>
+          <p class="auth-subtitle">Sign in to continue your adventure</p>
         </div>
-        <div>
-          <label>Password</label><br />
-          <input type="password" formControlName="password" />
+
+        <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input id="username" formControlName="username" placeholder="Enter your username" autocomplete="username" />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" type="password" formControlName="password" placeholder="Enter your password" autocomplete="current-password" />
+          </div>
+
+          <button type="submit" [disabled]="form.invalid || loading" class="auth-submit">
+            <span *ngIf="loading">Signing in...</span>
+            <span *ngIf="!loading">Sign In</span>
+          </button>
+        </form>
+
+        <p *ngIf="error" class="form-error auth-error">{{ error }}</p>
+
+        <div class="auth-footer">
+          <p>Don't have an account? <a routerLink="/register">Create one</a></p>
         </div>
-        <button type="submit" [disabled]="form.invalid || loading">Login</button>
-      </form>
-      <p *ngIf="error" style="color:#b00020">{{ error }}</p>
-      <p>No account? <a routerLink="/register">Register</a></p>
-    </section>
+      </section>
+    </div>
   `,
+  styles: [`
+    .auth-container {
+      min-height: calc(100vh - 200px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      margin: 0;
+      text-align: center;
+    }
+
+    .auth-header {
+      margin-bottom: 2rem;
+    }
+
+    .auth-header h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .auth-subtitle {
+      margin: 0;
+      color: var(--color-gray-400);
+      font-size: 0.9375rem;
+    }
+
+    .auth-form {
+      text-align: left;
+    }
+
+    .auth-form .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .auth-submit {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+    }
+
+    .auth-error {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .auth-footer {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-footer p {
+      margin: 0;
+      color: var(--color-gray-400);
+      font-size: 0.875rem;
+    }
+
+    .auth-footer a {
+      font-weight: 600;
+    }
+  `]
 })
 export class LoginComponent {
   loading = false;

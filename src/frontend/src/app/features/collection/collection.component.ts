@@ -9,10 +9,12 @@ import { imageSrc } from "../../core/image-url";
   imports: [NgFor, NgIf],
   template: `
     <section class="card">
-      <h2>Collection</h2>
-      <div class="toolbar">
-        <button type="button" (click)="load(true)">Owned only</button>
-        <button type="button" (click)="load(false)">All cards</button>
+      <div class="collection-header">
+        <h2>Collection</h2>
+        <div class="toolbar">
+          <button type="button" (click)="load(true)" class="secondary">Owned Only</button>
+          <button type="button" (click)="load(false)">All Cards</button>
+        </div>
       </div>
       <p *ngIf="error" class="form-error">{{ error }}</p>
     </section>
@@ -26,25 +28,45 @@ import { imageSrc } from "../../core/image-url";
           </ng-template>
         </div>
         <div class="char-card__body">
-          <h3 class="char-card__title">{{ c.name }} <small>{{ c.rarity }}</small></h3>
+          <h3 class="char-card__title">{{ c.name }} <small [attr.data-rarity]="c.rarity">{{ c.rarity }}</small></h3>
           <p class="char-card__meta">{{ c.faction }}</p>
-          <p class="char-card__stats">HP {{ c.maxHp }} · ATK {{ c.attack }} · DEF {{ c.defense }} · SPD {{ c.speed }}</p>
-          <p *ngIf="c.owned" class="char-card__level">Level {{ c.level ?? 1 }}</p>
-          <p *ngIf="c.passiveKey" class="char-card__passive">Passive: <strong>{{ c.passiveKey }}</strong> — {{ c.passiveValue }}</p>
-          <p class="char-card__owned" [class.char-card__owned--yes]="c.owned">{{ c.owned ? "Owned" : "Not owned" }}</p>
-          <p *ngIf="c.owned" class="char-card__upgrade">Skill upgrades: +{{ upgradeBonusPercent(c) }}%</p>
+          <div class="char-card__stats">
+            <span>HP {{ c.maxHp }}</span>
+            <span>ATK {{ c.attack }}</span>
+            <span>DEF {{ c.defense }}</span>
+            <span>SPD {{ c.speed }}</span>
+          </div>
+          <p *ngIf="c.owned" class="char-card__level">⭐ Level {{ c.level ?? 1 }}</p>
+          <p *ngIf="c.passiveKey && c.owned" class="char-card__passive">{{ c.passiveKey }} — {{ c.passiveValue }}</p>
+          <p class="char-card__owned" [class.char-card__owned--yes]="c.owned">
+            {{ c.owned ? "✓ Owned" : "✗ Not owned" }}
+          </p>
+          <p *ngIf="c.owned && c.duplicateCount" class="char-card__upgrade">↑ Upgrades: +{{ upgradeBonusPercent(c) }}%</p>
         </div>
       </article>
     </div>
   `,
   styles: [
     `
+      .collection-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .collection-header h2 {
+        margin: 0;
+      }
+
       .toolbar {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 8px;
+        gap: 0.5rem;
       }
+
       .collection-grid {
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
       }
