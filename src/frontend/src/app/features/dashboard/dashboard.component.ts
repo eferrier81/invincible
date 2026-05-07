@@ -109,8 +109,8 @@ import { UserProfile } from "../../core/models";
     }
 
     .welcome-card {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.15));
-      border-color: rgba(99, 102, 241, 0.3);
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(250, 204, 21, 0.15));
+      border-color: rgba(250, 204, 21, 0.3);
     }
 
     .welcome-content {
@@ -128,7 +128,7 @@ import { UserProfile } from "../../core/models";
     .role-badge {
       display: inline-block;
       padding: 0.25rem 0.75rem;
-      background: var(--color-primary);
+      background: #3b82f6;
       color: white;
       font-size: 0.75rem;
       font-weight: 600;
@@ -139,7 +139,8 @@ import { UserProfile } from "../../core/models";
     }
 
     .role-badge.admin {
-      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      background: linear-gradient(135deg, #facc15, #f59e0b);
+      color: #0c1a3c;
     }
 
     .stats-grid {
@@ -168,7 +169,7 @@ import { UserProfile } from "../../core/models";
       margin: 0;
       font-size: 1rem;
       font-weight: 600;
-      color: var(--color-gray-300);
+      color: #cbd5e1;
     }
 
     /* Energy Card */
@@ -182,23 +183,23 @@ import { UserProfile } from "../../core/models";
     .energy-value {
       font-size: 2.5rem;
       font-weight: 700;
-      color: var(--color-success);
+      color: #22c55e;
       line-height: 1;
     }
 
     .energy-separator {
       font-size: 1.5rem;
-      color: var(--color-gray-500);
+      color: #64748b;
     }
 
     .energy-max {
       font-size: 1.25rem;
-      color: var(--color-gray-400);
+      color: #94a3b8;
     }
 
     .energy-bar-container {
       height: 12px;
-      background: rgba(15, 23, 42, 0.5);
+      background: rgba(6, 26, 46, 0.6);
       border-radius: var(--radius);
       overflow: hidden;
       margin-bottom: 0.75rem;
@@ -206,7 +207,7 @@ import { UserProfile } from "../../core/models";
 
     .energy-bar {
       height: 100%;
-      background: linear-gradient(90deg, #10b981, #34d399);
+      background: linear-gradient(90deg, #22c55e, #4ade80);
       border-radius: var(--radius);
       transition: width 0.5s ease;
       position: relative;
@@ -223,7 +224,7 @@ import { UserProfile } from "../../core/models";
 
     .energy-hint {
       font-size: 0.8125rem;
-      color: var(--color-gray-400);
+      color: #94a3b8;
       margin: 0 0 0.75rem;
     }
 
@@ -235,19 +236,19 @@ import { UserProfile } from "../../core/models";
     .countdown {
       margin: 0;
       font-size: 0.875rem;
-      color: var(--color-gray-300);
+      color: #cbd5e1;
     }
 
     .countdown-time {
       font-weight: 600;
-      color: var(--color-primary-light);
+      color: #facc15;
     }
 
     .energy-full {
       margin: 0;
       font-size: 0.875rem;
       font-weight: 600;
-      color: var(--color-success);
+      color: #22c55e;
     }
 
     /* Progress Card */
@@ -267,13 +268,13 @@ import { UserProfile } from "../../core/models";
     .progress-value {
       font-size: 2rem;
       font-weight: 700;
-      color: var(--color-white);
+      color: #ffffff;
       line-height: 1;
     }
 
     .progress-label {
       font-size: 0.75rem;
-      color: var(--color-gray-400);
+      color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-top: 0.25rem;
@@ -287,7 +288,7 @@ import { UserProfile } from "../../core/models";
 
     .progress-bar-container {
       height: 8px;
-      background: rgba(15, 23, 42, 0.5);
+      background: rgba(6, 26, 46, 0.6);
       border-radius: var(--radius);
       overflow: hidden;
       margin-bottom: 0.75rem;
@@ -295,7 +296,7 @@ import { UserProfile } from "../../core/models";
 
     .progress-bar {
       height: 100%;
-      background: linear-gradient(90deg, #6366f1, #a855f7);
+      background: linear-gradient(90deg, #3b82f6, #facc15);
       border-radius: var(--radius);
       transition: width 0.5s ease;
     }
@@ -304,11 +305,11 @@ import { UserProfile } from "../../core/models";
       margin: 0.75rem 0 0;
       font-size: 0.8125rem;
       font-weight: 600;
-      color: var(--color-warning);
+      color: #facc15;
     }
 
     .progress-status.locked {
-      color: var(--color-gray-500);
+      color: #64748b;
     }
 
     /* Actions Card */
@@ -329,27 +330,27 @@ import { UserProfile } from "../../core/models";
       align-items: center;
       gap: 0.5rem;
       padding: 1.25rem 1rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(6, 26, 46, 0.5);
+      border: 1px solid rgba(250, 204, 21, 0.15);
       border-radius: var(--radius-lg);
       text-decoration: none;
       transition: all var(--transition);
     }
 
     .action-btn:hover {
-      background: rgba(99, 102, 241, 0.15);
-      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(250, 204, 21, 0.4);
       transform: translateY(-2px);
       box-shadow: var(--shadow-lg);
     }
 
     .action-btn.primary {
-      background: rgba(99, 102, 241, 0.2);
-      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(59, 130, 246, 0.25);
+      border-color: rgba(250, 204, 21, 0.4);
     }
 
     .action-btn.primary:hover {
-      background: rgba(99, 102, 241, 0.3);
+      background: rgba(59, 130, 246, 0.35);
     }
 
     .action-icon {
@@ -359,11 +360,11 @@ import { UserProfile } from "../../core/models";
     .action-label {
       font-size: 0.8125rem;
       font-weight: 500;
-      color: var(--color-gray-200);
+      color: #e2e8f0;
     }
 
     .action-btn:hover .action-label {
-      color: var(--color-white);
+      color: #ffffff;
     }
 
     .dashboard-error {

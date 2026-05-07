@@ -11,4 +11,6 @@ public interface BattleRepository extends JpaRepository<Battle, Long> {
 
     @Query("select count(distinct b.boss.id) from Battle b where b.user.id = :userId and b.result = 'WIN' and b.isHardcore = false")
     long countDistinctNormalWins(@Param("userId") Long userId);
+
+    List<Battle> findByDeckId(Long deckId);
 }

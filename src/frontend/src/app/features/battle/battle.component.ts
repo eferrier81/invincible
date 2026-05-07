@@ -255,14 +255,14 @@ import { imageSrc } from "../../core/image-url";
         line-height: 1.2;
       }
       .hint {
-        color: #555;
+        color: #94a3b8;
         font-size: 0.9rem;
       }
       .energy-line {
         margin-bottom: 12px;
       }
       .cost {
-        color: #666;
+        color: #94a3b8;
         font-size: 0.9rem;
       }
       .battle-field {
@@ -275,19 +275,19 @@ import { imageSrc } from "../../core/image-url";
         font-weight: 600;
       }
       .outcome-banner--win {
-        background: #e8f5e9;
-        color: #1b5e20;
-        border: 1px solid #a5d6a7;
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
       }
       .outcome-banner--lose {
-        background: #ffebee;
-        color: #b71c1c;
-        border: 1px solid #ef9a9a;
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
       }
       .outcome-banner--draw {
-        background: #fff8e1;
-        color: #e65100;
-        border: 1px solid #ffcc80;
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
       }
       .boss-panel {
         margin-bottom: 1rem;
@@ -313,6 +313,8 @@ import { imageSrc } from "../../core/image-url";
         aspect-ratio: 1 / 1;
         width: calc(100% + 20px);
         max-width: calc(100% + 20px);
+        max-height: 120px;
+        object-fit: cover;
         border-radius: 8px 8px 0 0;
         margin: -10px -10px 8px -10px;
         box-shadow: none;
@@ -326,7 +328,7 @@ import { imageSrc } from "../../core/image-url";
       }
       .bar {
         height: 8px;
-        background: #eee;
+        background: rgba(6, 26, 46, 0.6);
         border-radius: 4px;
         overflow: hidden;
       }
@@ -349,11 +351,12 @@ import { imageSrc } from "../../core/image-url";
       }
       .phase-abilities {
         font-size: 0.9rem;
-        color: #455a64;
+        color: #94a3b8;
         margin: 8px 0 0;
       }
       .desperation-tag {
-        color: #6a1b9a;
+        color: #c084fc;
+        font-weight: 600;
       }
       .bar .fill {
         height: 100%;
@@ -367,39 +370,42 @@ import { imageSrc } from "../../core/image-url";
       }
       .team-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
         gap: 12px;
         margin: 12px 0;
       }
       .ally-card {
-        border: 1px solid #ddd;
+        border: 1px solid rgba(250, 204, 21, 0.2);
         border-radius: 8px;
         padding: 10px;
-        background: #fafafa;
+        background: rgba(6, 26, 46, 0.7);
         overflow: hidden;
+        color: #ffffff;
       }
       .ally-card.current {
-        border-color: #1565c0;
-        box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.25);
-        background: #e3f2fd;
+        border-color: #facc15;
+        box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25);
+        background: rgba(6, 26, 46, 0.9);
       }
       .ally-card.down {
         opacity: 0.55;
       }
       .stats {
         font-size: 0.85rem;
-        color: #666;
+        color: #cbd5e1;
         margin: 0;
       }
       .stats.passive {
-        color: #37474f;
+        color: #facc15;
       }
       .cd {
         font-size: 0.85rem;
-        color: #b00020;
+        color: #f87171;
+        font-weight: 600;
       }
       .turn-hint {
         margin: 8px 0;
+        color: #94a3b8;
       }
       .actions {
         margin: 16px 0;
@@ -412,13 +418,14 @@ import { imageSrc } from "../../core/image-url";
         overflow-y: auto;
         padding-left: 1.2rem;
         font-size: 0.9rem;
+        color: #cbd5e1;
       }
       .reward-pack {
         margin: 12px 0 16px;
         padding: 12px;
-        border: 1px dashed #c5cae9;
+        border: 1px dashed rgba(250, 204, 21, 0.3);
         border-radius: 10px;
-        background: #f8f9ff;
+        background: rgba(6, 26, 46, 0.5);
       }
       .reward-grid {
         margin: 8px 0 12px;

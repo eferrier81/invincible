@@ -68,16 +68,15 @@ import { NgIf } from "@angular/common";
     .auth-header h1 {
       margin: 0 0 0.5rem;
       font-size: 1.75rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #34d399, #10b981);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-weight: 800;
+      color: #facc15;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .auth-subtitle {
       margin: 0;
-      color: var(--color-gray-400);
+      color: #94a3b8;
       font-size: 0.9375rem;
     }
 
@@ -109,7 +108,7 @@ import { NgIf } from "@angular/common";
 
     .auth-footer p {
       margin: 0;
-      color: var(--color-gray-400);
+      color: #94a3b8;
       font-size: 0.875rem;
     }
 

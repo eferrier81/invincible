@@ -5,6 +5,7 @@ import com.invinciblegame.dto.request.DeckRequest;
 import com.invinciblegame.dto.response.DeckResponse;
 import com.invinciblegame.exception.ApiException;
 import com.invinciblegame.mapper.DeckMapper;
+import com.invinciblegame.repository.BattleRepository;
 import com.invinciblegame.repository.CharacterCardRepository;
 import com.invinciblegame.repository.DeckRepository;
 import com.invinciblegame.repository.UserCharacterRepository;
@@ -18,6 +19,7 @@ public class DeckService {
     private final DeckRepository deckRepository;
     private final CharacterCardRepository cardRepository;
     private final UserCharacterRepository userCharacterRepository;
+    private final BattleRepository battleRepository;
     private final CurrentUserService currentUserService;
     private final DeckMapper deckMapper;
 
@@ -25,12 +27,14 @@ public class DeckService {
         DeckRepository deckRepository,
         CharacterCardRepository cardRepository,
         UserCharacterRepository userCharacterRepository,
+        BattleRepository battleRepository,
         CurrentUserService currentUserService,
         DeckMapper deckMapper
     ) {
         this.deckRepository = deckRepository;
         this.cardRepository = cardRepository;
         this.userCharacterRepository = userCharacterRepository;
+        this.battleRepository = battleRepository;
         this.currentUserService = currentUserService;
         this.deckMapper = deckMapper;
     }
@@ -60,6 +64,16 @@ public class DeckService {
     public void delete(Long id) {
         var user = currentUserService.requireCurrentUser();
         Deck deck = findOwnedDeck(user.getId(), id, "Cannot delete another user's deck");
+
+        // Clear deck reference in all related battles to avoid FK constraint violation
+        var battles = battleRepository.findByDeckId(id);
+        for (var battle : battles) {
+            battle.setDeck(null);
+        }
+        if (!battles.isEmpty()) {
+            battleRepository.saveAll(battles);
+        }
+
         deckRepository.delete(deck);
     }
 
