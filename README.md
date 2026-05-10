@@ -1,21 +1,21 @@
 # Invincible Game
 
-Full-stack turn-based boss battle web application developed for **977-364 Software Deployment and Maintenance** at Prince of Songkla University, Phuket Campus.[file:37]
+Full-stack turn-based boss battle web application developed for **977-364 Software Deployment and Maintenance** at Prince of Songkla University, Phuket Campus.
 
 ## Project Overview
 
-Invincible Game is a web-based application where players collect character cards, build teams, and fight bosses in turn-based battles. The project is designed as a complete full-stack system with a responsive frontend, a RESTful backend, persistent storage, containerized deployment, and maintenance-oriented development practices.[file:37]
+Invincible Game is a web-based application where players collect character cards, build teams, and fight bosses in turn-based battles. The project is designed as a complete full-stack system with a responsive frontend, a RESTful backend, persistent storage, containerized deployment, and maintenance-oriented development practices.
 
-The application follows the course objective of building, deploying, and maintaining a real-world web application using Docker, cloud deployment concepts, CI/CD automation, configuration management, semantic versioning, and structured software maintenance workflows.[file:37]
+The application follows the course objective of building, deploying, and maintaining a real-world web application using Docker, cloud deployment concepts, CI/CD automation, configuration management, semantic versioning, and structured software maintenance workflows.
 
 ## Main Goals
 
-- Provide user authentication and role-based access control.[file:37]
-- Deliver at least four distinct CRUD features through a responsive web interface and REST API.[file:37]
-- Containerize the application with Docker and orchestrate services with Docker Compose.[file:37]
-- Support cloud deployment through environment-based configuration.[file:37]
-- Apply structured Git workflows, pull requests, release management, and changelog tracking.[file:37]
-- Demonstrate maintenance activities such as issue tracking, change requests, bug fixing, and post-release improvements.[file:37]
+- Provide user authentication and role-based access control.
+- Deliver at least four distinct CRUD features through a responsive web interface and REST API.
+- Containerize the application with Docker and orchestrate services with Docker Compose.
+- Support cloud deployment through environment-based configuration.
+- Apply structured Git workflows, pull requests, release management, and changelog tracking.
+- Demonstrate maintenance activities such as issue tracking, change requests, bug fixing, and post-release improvements.
 
 ## Technology Stack
 
@@ -28,7 +28,7 @@ The application follows the course objective of building, deploying, and maintai
 | CI/CD | GitHub Actions |
 | Version Control | Git + GitHub |
 
-The selected stack follows the course-recommended technologies, which explicitly include Angular, Spring Boot, MySQL, Docker, Docker Compose, and GitHub Actions-compatible CI/CD workflows.[file:37]
+The selected stack follows the course-recommended technologies, which explicitly include Angular, Spring Boot, MySQL, Docker, Docker Compose, and GitHub Actions-compatible CI/CD workflows.
 
 ## Core Features
 
@@ -43,11 +43,11 @@ Current and planned application features include:
 - Admin management for cards, bosses, and reward pools.
 - Battle history and maintenance-driven feature evolution.
 
-These features support the course requirement for a user-facing application with backend persistence, authentication, multiple CRUD domains, and a RESTful API backend.[file:37]
+These features support the course requirement for a user-facing application with backend persistence, authentication, multiple CRUD domains, and a RESTful API backend.
 
 ## Project Structure
 
-The repository is organized to align with the recommended course structure.[file:37]
+The repository is organized to align with the recommended course structure.
 
 ```text
 project-root/
